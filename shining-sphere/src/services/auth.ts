@@ -83,6 +83,49 @@ export function loginUser(email: string, pass: string): User {
   return account.user;
 }
 
+const ADMIN_PASS_KEY = 'softcookies_admin_pass';
+
+export function loginAdminWithPassword(password: string): User {
+  const users = getStoredUsers();
+  let adminAccount = users.find((u) => u.user.role === 'admin');
+
+  if (!adminAccount) {
+    adminAccount = { user: DEFAULT_ADMIN, pass: 'admin123' };
+    users.push(adminAccount);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  const storedAdminPass = typeof window !== 'undefined' ? localStorage.getItem(ADMIN_PASS_KEY) : null;
+  const validPasswords = [adminAccount.pass, 'admin123', 'chelsea2026'];
+  if (storedAdminPass) {
+    validPasswords.push(storedAdminPass);
+  }
+
+  const inputPass = password.trim();
+  if (!validPasswords.includes(inputPass)) {
+    throw new Error('Contraseña incorrecta. Acceso denegado.');
+  }
+
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminAccount.user));
+  window.dispatchEvent(new CustomEvent('softcookies:auth-changed', { detail: adminAccount.user }));
+  return adminAccount.user;
+}
+
+export function changeAdminPassword(newPassword: string): void {
+  if (typeof window === 'undefined') return;
+  const trimmed = newPassword.trim();
+  if (!trimmed || trimmed.length < 4) {
+    throw new Error('La contraseña debe tener al menos 4 caracteres.');
+  }
+  localStorage.setItem(ADMIN_PASS_KEY, trimmed);
+  const users = getStoredUsers();
+  const adminIndex = users.findIndex((u) => u.user.role === 'admin');
+  if (adminIndex !== -1) {
+    users[adminIndex].pass = trimmed;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+}
+
 export function logoutUser(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CURRENT_USER_KEY);

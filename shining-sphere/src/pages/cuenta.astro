@@ -47,9 +47,6 @@ import BottomNav from '../components/BottomNav.astro';
           </div>
 
           <div class="profile-actions">
-            <a href="/admin" id="btn-admin-dashboard" class="btn-admin-pill" style="display: none;">
-              👩‍🍳 Panel de la Chef
-            </a>
             <button type="button" id="btn-logout" class="btn-logout-pill">
               Cerrar Sesión
             </button>
@@ -97,8 +94,6 @@ import BottomNav from '../components/BottomNav.astro';
   const displayPhone = document.getElementById('display-phone') as HTMLElement;
   const displayRole = document.getElementById('display-role') as HTMLElement;
   const userAvatar = document.getElementById('user-avatar') as HTMLElement;
-  const adminBtn = document.getElementById('btn-admin-dashboard') as HTMLElement;
-
   const emptyOrders = document.getElementById('empty-orders') as HTMLElement;
   const ordersList = document.getElementById('orders-list') as HTMLElement;
 
@@ -130,10 +125,6 @@ import BottomNav from '../components/BottomNav.astro';
         .substring(0, 2)
         .toUpperCase();
       userAvatar.textContent = initials || 'SC';
-    }
-
-    if (adminBtn) {
-      adminBtn.style.display = user.role === 'admin' ? 'inline-flex' : 'none';
     }
 
     // Load orders
@@ -348,23 +339,6 @@ import BottomNav from '../components/BottomNav.astro';
     display: flex;
     align-items: center;
     gap: 0.75rem;
-  }
-
-  .btn-admin-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.6rem 1.1rem;
-    border-radius: var(--radius-full);
-    background-color: var(--color-primary);
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 800;
-    transition: all 0.2s ease;
-  }
-
-  .btn-admin-pill:hover {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
   }
 
   .btn-logout-pill {

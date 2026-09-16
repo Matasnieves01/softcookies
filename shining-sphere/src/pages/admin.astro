@@ -17,27 +17,34 @@ import BottomNav from '../components/BottomNav.astro';
     <div class="container">
       <!-- Acceso no autorizado (Login de la Chef) -->
       <section id="admin-login-view" class="admin-auth-card" style="display: none;">
-        <div class="lock-icon">👩‍🍳</div>
+        <div class="lock-icon">🔒</div>
         <h1 class="admin-auth-title">Acceso Chef Administradora</h1>
         <p class="admin-auth-desc">
-          Este panel está reservado para la chef para publicar nuevas promociones, tandas y gestionar pedidos.
+          Ingresa la contraseña de administradora para acceder al panel de control de tandas y pedidos.
         </p>
 
         <form id="admin-login-form" class="admin-form">
           <div class="form-group">
-            <label for="admin-email">Correo de la Chef</label>
-            <input type="email" id="admin-email" value="chef@softcookies.com" required class="admin-input" />
-          </div>
-
-          <div class="form-group">
-            <label for="admin-pass">Contraseña</label>
-            <input type="password" id="admin-pass" value="admin123" required class="admin-input" />
+            <label for="admin-pass">Contraseña de Acceso</label>
+            <div class="password-input-row">
+              <input 
+                type="password" 
+                id="admin-pass" 
+                placeholder="Ingresa la contraseña de la chef" 
+                required 
+                autocomplete="current-password"
+                class="admin-input" 
+              />
+              <button type="button" id="btn-toggle-pass" class="btn-toggle-pwd" aria-label="Mostrar u ocultar contraseña">
+                👁️
+              </button>
+            </div>
           </div>
 
           <div id="admin-login-error" class="admin-error" style="display: none;"></div>
 
           <button type="submit" class="btn-admin-submit">
-            <span>Entrar al Panel de Control</span>
+            <span>Acceder al Panel</span>
           </button>
         </form>
       </section>
@@ -95,6 +102,9 @@ import BottomNav from '../components/BottomNav.astro';
           </button>
           <button type="button" class="tab-btn" data-tab="manage-promos">
             <span>📋 Tandas y Promociones</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="security">
+            <span>🔐 Contraseña</span>
           </button>
         </div>
 
@@ -194,6 +204,36 @@ import BottomNav from '../components/BottomNav.astro';
 
           <div id="admin-promos-list" class="admin-promos-container"></div>
         </section>
+
+        <!-- TAB 4: Seguridad y Contraseña -->
+        <section id="tab-content-security" class="tab-content" style="display: none;">
+          <div class="form-container-card" style="max-width: 500px; margin: 0 auto;">
+            <div class="form-intro">
+              <h2 class="content-title">Cambiar Contraseña de Administradora</h2>
+              <p>Modifica la clave de acceso requerida para ingresar a este panel mediante la URL /admin.</p>
+            </div>
+
+            <form id="change-pass-form" class="create-promo-form">
+              <div class="form-group">
+                <label for="new-admin-pass">Nueva Contraseña de Acceso *</label>
+                <input 
+                  type="password" 
+                  id="new-admin-pass" 
+                  required 
+                  minlength="4" 
+                  placeholder="Mínimo 4 caracteres (ej. miClave2026)" 
+                  class="admin-input" 
+                />
+              </div>
+
+              <div id="change-pass-feedback" class="admin-success-msg" style="display: none;"></div>
+
+              <button type="submit" class="btn-publish-promo">
+                <span>Guardar Nueva Contraseña</span>
+              </button>
+            </form>
+          </div>
+        </section>
       </div>
     </div>
   </main>
@@ -203,7 +243,7 @@ import BottomNav from '../components/BottomNav.astro';
 </Layout>
 
 <script>
-  import { getCurrentUser, loginUser, logoutUser, isAdminUser } from '../services/auth';
+  import { getCurrentUser, loginAdminWithPassword, changeAdminPassword, logoutUser, isAdminUser } from '../services/auth';
   import { getAllOrders, updateOrderStatus } from '../services/orders';
   import { getAllPromotions, createPromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
   import type { Order, Promotion } from '../types';
@@ -461,28 +501,63 @@ import BottomNav from '../components/BottomNav.astro';
     }
   });
 
+  // Toggle pass visibility
+  const togglePassBtn = document.getElementById('btn-toggle-pass');
+  togglePassBtn?.addEventListener('click', () => {
+    const passInput = document.getElementById('admin-pass') as HTMLInputElement;
+    if (passInput) {
+      passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    }
+  });
+
   // Admin Login Handle
   loginForm?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = (document.getElementById('admin-email') as HTMLInputElement).value;
-    const pass = (document.getElementById('admin-pass') as HTMLInputElement).value;
+    if (loginError) {
+      loginError.style.display = 'none';
+      loginError.textContent = '';
+    }
+    const passInput = document.getElementById('admin-pass') as HTMLInputElement;
+    const pass = passInput?.value || '';
 
     try {
-      const user = loginUser(email, pass);
-      if (user.role !== 'admin') {
-        throw new Error('Esta cuenta no cuenta con permisos de Chef Administradora.');
-      }
+      loginAdminWithPassword(pass);
       initAdmin();
     } catch (err: any) {
       if (loginError) {
-        loginError.textContent = err.message || 'Error de autenticación';
+        loginError.textContent = err.message || 'Contraseña incorrecta';
         loginError.style.display = 'block';
       }
     }
   });
 
+  // Change Password Handle
+  const changePassForm = document.getElementById('change-pass-form') as HTMLFormElement;
+  const changePassFeedback = document.getElementById('change-pass-feedback') as HTMLElement;
+  changePassForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newPassInput = document.getElementById('new-admin-pass') as HTMLInputElement;
+    const newPass = newPassInput?.value || '';
+
+    try {
+      changeAdminPassword(newPass);
+      if (changePassFeedback) {
+        changePassFeedback.textContent = '¡Contraseña actualizada con éxito!';
+        changePassFeedback.style.display = 'block';
+        setTimeout(() => {
+          changePassFeedback.style.display = 'none';
+          changePassForm.reset();
+        }, 2500);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error al actualizar la contraseña');
+    }
+  });
+
   logoutBtn?.addEventListener('click', () => {
     logoutUser();
+    const passInput = document.getElementById('admin-pass') as HTMLInputElement;
+    if (passInput) passInput.value = '';
     initAdmin();
   });
 
@@ -549,6 +624,35 @@ import BottomNav from '../components/BottomNav.astro';
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(141, 75, 0, 0.15);
+  }
+
+  .password-input-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .password-input-row .admin-input {
+    padding-right: 2.75rem;
+  }
+
+  .btn-toggle-pwd {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.15rem;
+    padding: 0.25rem 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.65;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn-toggle-pwd:hover {
+    opacity: 1;
   }
 
   .admin-error {

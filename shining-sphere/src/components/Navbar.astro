@@ -57,11 +57,6 @@ const {
         <span>IG</span>
       </a>
 
-      <!-- Botón de Admin (Visible solo si la chef está autenticada) -->
-      <a href="/admin" id="nav-admin-link" class="btn-pill btn-admin" style="display: none;">
-        <span>👩‍🍳 Admin</span>
-      </a>
-
       <!-- Botón de Cuenta -->
       <button type="button" id="nav-account-btn" class="btn-pill btn-account" aria-label="Abrir mi cuenta">
         <svg viewBox="0 0 24 24" class="action-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,7 +74,6 @@ const {
 
   const accountBtn = document.getElementById('nav-account-btn');
   const accountText = document.getElementById('nav-account-text');
-  const adminLink = document.getElementById('nav-admin-link');
 
   function updateNavAuth() {
     const user = getCurrentUser();
@@ -87,12 +81,8 @@ const {
       if (accountText) {
         accountText.textContent = user.name.split(' ')[0] || 'Mi Cuenta';
       }
-      if (adminLink) {
-        adminLink.style.display = user.role === 'admin' ? 'inline-flex' : 'none';
-      }
     } else {
       if (accountText) accountText.textContent = 'Mi Cuenta';
-      if (adminLink) adminLink.style.display = 'none';
     }
   }
 
@@ -234,17 +224,6 @@ const {
   .btn-subtle {
     min-width: 40px;
     padding: 0.45rem 0.75rem;
-  }
-
-  .btn-admin {
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border-color: var(--color-primary);
-  }
-
-  .btn-admin:hover {
-    background-color: var(--color-primary-hover);
-    color: #ffffff;
   }
 
   .btn-account {

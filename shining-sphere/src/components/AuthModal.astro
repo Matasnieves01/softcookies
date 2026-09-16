@@ -72,14 +72,6 @@
         <span>Crear Mi Cuenta</span>
       </button>
     </form>
-
-    <!-- Acceso Rápido Demo Admin -->
-    <div class="admin-demo-access">
-      <p class="demo-title">Acceso de Demostración para la Chef:</p>
-      <button type="button" id="btn-quick-chef" class="chef-demo-btn">
-        <span>👩‍🍳 Ingresar como Chef Admin</span>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -93,7 +85,6 @@
   const loginForm = document.getElementById('login-form') as HTMLFormElement;
   const registerForm = document.getElementById('register-form') as HTMLFormElement;
   const feedback = document.getElementById('auth-feedback') as HTMLElement;
-  const quickChefBtn = document.getElementById('btn-quick-chef') as HTMLButtonElement;
 
   function showFeedback(msg: string, isError = true) {
     if (!feedback) return;
@@ -189,20 +180,6 @@
       }, 800);
     } catch (err: any) {
       showFeedback(err.message || 'Error al registrar la cuenta');
-    }
-  });
-
-  // Quick Chef Admin Login
-  quickChefBtn?.addEventListener('click', () => {
-    try {
-      const chef = loginUser('chef@softcookies.com', 'admin123');
-      showFeedback('Sesión de Chef iniciada. Redirigiendo...', false);
-      setTimeout(() => {
-        closeModal();
-        window.location.href = '/admin';
-      }, 600);
-    } catch (err: any) {
-      showFeedback(err.message);
     }
   });
 </script>
@@ -387,40 +364,5 @@
     background-color: var(--color-primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(141, 75, 0, 0.35);
-  }
-
-  .admin-demo-access {
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px dashed var(--color-outline-variant);
-    text-align: center;
-  }
-
-  .demo-title {
-    font-size: 0.775rem;
-    color: var(--color-on-surface-muted);
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-  }
-
-  .chef-demo-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--color-surface-container);
-    border: 1px solid var(--color-outline-variant);
-    border-radius: var(--radius-full);
-    font-size: 0.825rem;
-    font-weight: 800;
-    color: var(--color-secondary-dark);
-    transition: all 0.2s ease;
-  }
-
-  .chef-demo-btn:hover {
-    background-color: var(--color-surface-container-high);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
   }
 </style>
