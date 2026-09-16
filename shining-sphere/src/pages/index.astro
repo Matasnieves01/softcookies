@@ -5,9 +5,14 @@ import Navbar from '../components/Navbar.astro';
 import HeroGreeting from '../components/HeroGreeting.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import BatchCard from '../components/BatchCard.astro';
-import WeekendPackCard from '../components/WeekendPackCard.astro';
 import Footer from '../components/Footer.astro';
 import BottomNav from '../components/BottomNav.astro';
+import { getTandasFromDb, getCloudflareDb } from '../services/tandas';
+
+export const prerender = false;
+
+const db = await getCloudflareDb(Astro.locals);
+const serverTandas = await getTandasFromDb(db, true);
 ---
 
 <Layout 
@@ -15,7 +20,7 @@ import BottomNav from '../components/BottomNav.astro';
   description="Horneadas exclusivas por tanda y promociones especiales de la chef @chelsea.mhm. Reserva tu cupo antes de que se agoten."
 >
   <!-- Top Announcement -->
-  <TopBanner text="• PROMOS & TANDAS DE SEPTIEMBRE • CUPOS LIMITADOS" />
+  <TopBanner text="• TANDAS ARTESANALES DE LA CHEF • CUPOS LIMITADOS" />
 
   <!-- Main Navigation Header -->
   <Navbar 
@@ -35,32 +40,55 @@ import BottomNav from '../components/BottomNav.astro';
       title="Tandas Abiertas para Reserva" 
     />
 
-    <!-- Featured Batch Card Section -->
-    <section class="batch-section" aria-label="Tanda destacada">
-      <div class="container">
-        <BatchCard 
-          title="Tarta Vasca con Frutos Rojos"
-          subtitle="CREMOSA, TOSTADA Y CON TOPPING CASERO"
-          description="Receta artesanal horneada con centro ultra fundente y compota fresca de frutos rojos silvestres."
-          dateText="Sábado 21 & Domingo 22 Sept"
-          price="$6.50"
-          unit="/ porción"
-          imageSrc="/images/tarta-vasca.jpg"
-          imageAlt="Tarta Vasca horneada con centro cremoso y frutos rojos"
-          reservedCount={17}
-          totalCount={25}
-        />
+    <!-- Dynamic Tandas Section -->
+    <section class="batch-section" aria-label="Tandas disponibles">
+      <div class="container" id="tandas-container">
+        <!-- Rendered SSR or Hydrated dynamically -->
+        <div id="tandas-ssr-list" class="tandas-grid" style={serverTandas.length > 0 ? '' : 'display: none;'}>
+          {serverTandas.map((tanda) => (
+            <BatchCard 
+              slug={tanda.slug}
+              title={tanda.name}
+              subtitle={tanda.subtitle}
+              description={tanda.longDescription || tanda.shortDescription}
+              dateText={tanda.deliveryDate || tanda.batchDates}
+              price={`$${tanda.price.toFixed(2)}`}
+              unit={tanda.unit}
+              imageSrc={tanda.image}
+              imageAlt={tanda.name}
+              reservedCount={tanda.reservedSlots}
+              totalCount={tanda.totalSlots}
+            />
+          ))}
+        </div>
+
+        <div id="tandas-empty-state" class="empty-tandas-card" style={serverTandas.length === 0 ? '' : 'display: none;'}>
+          <div class="empty-icon">👩‍🍳</div>
+          <h3 class="empty-title">Próxima tanda en preparación</h3>
+          <p class="empty-desc">
+            La chef Chelsea está preparando los nuevos horneados artesanales. Escríbenos por WhatsApp o síguenos en Instagram para no perderte el próximo cupo.
+          </p>
+          <div class="empty-actions">
+            <a 
+              href="https://wa.me/50760000000?text=Hola%20Chef%20Chelsea!%20%F0%9F%91%8B%20Quisiera%20saber%20cu%C3%A1ndo%20abrir%C3%A1n%20la%20pr%C3%B3xima%20tanda%20en%20Soft%20Cookies" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="btn-wa-pill"
+            >
+              <span>💬 Consultar Próxima Tanda por WhatsApp</span>
+            </a>
+            <a 
+              href="https://instagram.com/softcookies.pty" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="btn-ig-pill"
+            >
+              <span>📸 Seguir en Instagram @softcookies.pty</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
-
-    <!-- Weekend Pack Promotional Strip -->
-    <WeekendPackCard 
-      title="Caja Degustación 4 Sabores Signature"
-      description="2 Soft Cookies Chunky Chocolate + 1 Red Velvet Cream + 1 Porción de Tarta Vasca artesanal."
-      originalPrice="$16.00"
-      discountPrice="$14.00"
-      unit="/ box"
-    />
   </main>
 
   <!-- Site Footer -->
@@ -70,12 +98,190 @@ import BottomNav from '../components/BottomNav.astro';
   <BottomNav activeTab="inicio" />
 </Layout>
 
+<script>
+  import { fetchTandasClient } from '../services/tandas';
+
+  const ssrList = document.getElementById('tandas-ssr-list');
+  const emptyState = document.getElementById('tandas-empty-state');
+
+  async function checkAndHydrateTandas() {
+    try {
+      const tandas = await fetchTandasClient(false);
+      // If server rendered 0, or client has fresh tandas
+      if (tandas.length > 0) {
+        if (ssrList) {
+          ssrList.innerHTML = tandas.map((tanda) => {
+            const remaining = tanda.totalSlots - tanda.reservedSlots;
+            const pct = Math.round((tanda.reservedSlots / tanda.totalSlots) * 100);
+            return `
+              <article class="batch-card" aria-label="Tanda de ${tanda.name}">
+                <div class="card-grid">
+                  <div class="visual-col">
+                    <div class="image-wrapper">
+                      <img src="${tanda.image}" alt="${tanda.name}" class="product-image" loading="lazy" />
+                    </div>
+                  </div>
+                  <div class="details-col">
+                    <div class="price-header">
+                      <div class="price-tag">
+                        <span class="price-val">$${Number(tanda.price).toFixed(2)}</span>
+                        <span class="price-unit">${tanda.unit || '/ porción'}</span>
+                      </div>
+                    </div>
+                    <div class="title-section">
+                      <h3 class="product-title">${tanda.name}</h3>
+                      ${tanda.subtitle ? `<p class="product-subtitle">${tanda.subtitle}</p>` : ''}
+                      <p class="product-description">${tanda.longDescription || tanda.shortDescription}</p>
+                    </div>
+                    <div class="date-chip">
+                      <svg viewBox="0 0 24 24" class="chip-calendar-icon" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      <span>📅 Reparto: ${tanda.deliveryDate || tanda.batchDates}</span>
+                    </div>
+                    <div class="scarcity-box">
+                      <div class="scarcity-labels">
+                        <span class="remaining-text">
+                          <span class="fire-emoji">🔥</span> Quedan ${remaining} cupos
+                        </span>
+                        <span class="reserved-text">${tanda.reservedSlots} de ${tanda.totalSlots} reservados</span>
+                      </div>
+                      <div class="progress-track">
+                        <div class="progress-bar" style="width: ${pct}%"></div>
+                      </div>
+                    </div>
+                    <a href="/producto/${tanda.slug}" class="cta-button">
+                      <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span>Ver detalles y reservar</span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join('');
+          ssrList.style.display = 'grid';
+        }
+        if (emptyState) emptyState.style.display = 'none';
+      } else {
+        // No tandas
+        if (ssrList) ssrList.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+      }
+    } catch (err) {
+      console.warn('Hydration error:', err);
+    }
+  }
+
+  // Listen for admin changes
+  window.addEventListener('softcookies:promotions-updated', checkAndHydrateTandas);
+  // Also check on mount if client has freshly published tandas
+  checkAndHydrateTandas();
+</script>
+
 <style>
   main {
     flex: 1;
   }
 
   .batch-section {
-    padding-bottom: 0.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .tandas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* Empty state */
+  .empty-tandas-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 3.5rem 1.75rem;
+    text-align: center;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    max-width: 600px;
+    margin: 1.5rem auto 2.5rem;
+  }
+
+  .empty-icon {
+    font-size: 3.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.65rem;
+  }
+
+  .empty-desc {
+    font-size: 0.95rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .empty-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (min-width: 520px) {
+    .empty-actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  .btn-wa-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    background-color: #25D366;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius-full);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  .btn-wa-pill:hover {
+    background-color: #20b858;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+  }
+
+  .btn-ig-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    background-color: var(--color-surface-container);
+    color: var(--color-secondary-dark);
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-outline-variant);
+    transition: all 0.2s ease;
+  }
+
+  .btn-ig-pill:hover {
+    background-color: var(--color-surface-container-high);
+    border-color: var(--color-primary);
   }
 </style>

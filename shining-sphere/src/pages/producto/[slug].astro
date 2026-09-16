@@ -4,21 +4,41 @@ import TopBanner from '../../components/TopBanner.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import BottomNav from '../../components/BottomNav.astro';
-import { products, type Product } from '../../data/products';
+import { getTandaBySlugFromDb, getCloudflareDb } from '../../services/tandas';
+import type { Tanda } from '../../types';
 
-export function getStaticPaths() {
-  return products.map((product) => ({
-    params: { slug: product.slug },
-    props: { product },
-  }));
-}
+export const prerender = false;
 
-interface Props {
-  product: Product;
-}
+const { slug } = Astro.params;
+const db = await getCloudflareDb(Astro.locals);
+const tanda = slug ? await getTandaBySlugFromDb(db, slug) : null;
 
-const { product } = Astro.props;
-const remainingSlots = product.totalSlots - product.reservedSlots;
+// Tanda data or fallback
+const product: Tanda = tanda || {
+  id: slug || 'not-found',
+  slug: slug || 'not-found',
+  name: 'Tanda no encontrada',
+  subtitle: 'Esta tanda no está disponible o ya expiró',
+  price: 6.50,
+  unit: '/ porción',
+  image: '/images/tarta-vasca.jpg',
+  shortDescription: 'La tanda que buscas no se encuentra activa en este momento.',
+  longDescription: 'Puedes revisar las tandas abiertas en la página principal para conocer los próximos horneados.',
+  details: ['Elaboración artesanal', 'Cupos limitados por tanda'],
+  ingredients: ['Receta especial de la Chef', 'Ingredientes seleccionados'],
+  batchDates: 'Próximamente',
+  deliveryDate: 'Próximamente',
+  locations: ['Tierras Altas', 'Bugaba', 'David'],
+  totalSlots: 20,
+  reservedSlots: 0,
+  isActive: false,
+  createdAt: new Date().toISOString()
+};
+
+const isFound = tanda !== null;
+const remainingSlots = Math.max(0, product.totalSlots - product.reservedSlots);
+const details = product.details && product.details.length ? product.details : ['Elaboración artesanal por tanda limitada', 'Ingredientes frescos de alta calidad', 'Empaque protector individual para máxima frescura'];
+const ingredients = product.ingredients && product.ingredients.length ? product.ingredients : ['Receta especial de la Chef Chelsea', 'Mantequilla pura', 'Ingredientes seleccionados'];
 ---
 
 <Layout 
@@ -97,7 +117,7 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
 
             <h3 class="subsection-title">Detalles y conservación:</h3>
             <ul class="styled-list">
-              {product.details.map((detail) => (
+              {details.map((detail) => (
                 <li>
                   <span class="list-check">✓</span>
                   <span>{detail}</span>
@@ -107,7 +127,7 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
 
             <h3 class="subsection-title">Ingredientes principales:</h3>
             <div class="ingredients-tags">
-              {product.ingredients.map((ing) => (
+              {ingredients.map((ing) => (
                 <span class="ingredient-pill">{ing}</span>
               ))}
             </div>

@@ -1,5 +1,6 @@
 ---
 interface Props {
+  slug?: string;
   title?: string;
   subtitle?: string;
   description?: string;
@@ -13,15 +14,16 @@ interface Props {
 }
 
 const {
-  title = "Tarta Vasca con Frutos Rojos",
-  subtitle = "CREMOSA, TOSTADA Y CON TOPPING CASERO",
-  description = "Receta artesanal horneada con centro ultra fundente y compota fresca de frutos rojos silvestres.",
-  dateText = "Sábado 21 & Domingo 22 Sept",
+  slug = "tanda",
+  title = "",
+  subtitle = "",
+  description = "",
+  dateText = "",
   price = "$6.50",
   unit = "/ porción",
   imageSrc = "/images/tarta-vasca.jpg",
-  imageAlt = "Tarta Vasca con Frutos Rojos y compota casera",
-  reservedCount = 17,
+  imageAlt = title,
+  reservedCount = 0,
   totalCount = 25
 } = Astro.props;
 
@@ -86,7 +88,7 @@ const progressPercentage = Math.round((reservedCount / totalCount) * 100);
       </div>
 
       <!-- Main Action Button -->
-      <a href="/producto/tarta-vasca" class="cta-button" id="btn-reservar-tarta">
+      <a href={`/producto/${slug}`} class="cta-button">
         <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>

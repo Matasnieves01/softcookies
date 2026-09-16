@@ -122,75 +122,91 @@ import BottomNav from '../components/BottomNav.astro';
           <div id="admin-orders-list" class="admin-orders-container"></div>
         </section>
 
-        <!-- TAB 2: Publicar Nueva Promoción -->
+        <!-- TAB 2: Publicar Nueva Tanda -->
         <section id="tab-content-create-promo" class="tab-content" style="display: none;">
           <div class="form-container-card">
             <div class="form-intro">
-              <h2 class="content-title">Crear Nueva Tanda o Promoción</h2>
-              <p>Completa los datos del producto horneado para que los clientes puedan verlo y reservarlo.</p>
+              <h2 class="content-title">Publicar Nueva Tanda</h2>
+              <p>Ingresa la foto, datos del horneado, fecha de reparto y cupos disponibles para que los clientes puedan reservar.</p>
             </div>
 
             <form id="create-promo-form" class="create-promo-form">
+              <!-- Foto de la Tanda -->
+              <div class="form-group photo-upload-group">
+                <label for="promo-image-file">Foto de la Tanda *</label>
+                <div class="photo-upload-zone" id="photo-upload-zone">
+                  <input type="file" id="promo-image-file" accept="image/*" class="file-input-hidden" />
+                  <input type="hidden" id="promo-image-data" required />
+                  <div id="upload-prompt" class="upload-prompt">
+                    <span class="upload-icon">📷</span>
+                    <span class="upload-text">Selecciona una foto de tu producto horneado</span>
+                    <span class="upload-hint">Haz clic o arrastra una imagen (JPG, PNG, WebP)</span>
+                  </div>
+                  <div id="upload-preview-wrap" class="upload-preview-wrap" style="display: none;">
+                    <img id="upload-preview-img" src="" alt="Previsualización" class="upload-preview-img" />
+                    <button type="button" id="btn-remove-photo" class="btn-remove-photo" title="Cambiar foto">✕ Cambiar foto</button>
+                  </div>
+                </div>
+                <div class="url-fallback-row">
+                  <small>O si tienes un enlace directo a la imagen:</small>
+                  <input type="url" id="promo-image-url" placeholder="https://ejemplo.com/foto.jpg" class="admin-input input-sm" />
+                </div>
+              </div>
+
+              <!-- Nombre y Subtítulo -->
               <div class="form-grid-2">
                 <div class="form-group">
-                  <label for="promo-name">Nombre del Producto / Tanda *</label>
-                  <input type="text" id="promo-name" required placeholder="Ej. Tarta Vasca de Pistacho" class="admin-input" />
+                  <label for="promo-name">Nombre de la Tanda / Producto *</label>
+                  <input type="text" id="promo-name" required placeholder="Ej. Tarta Vasca con Frutos Rojos" class="admin-input" />
                 </div>
 
                 <div class="form-group">
-                  <label for="promo-subtitle">Subtítulo Artesanal *</label>
-                  <input type="text" id="promo-subtitle" required placeholder="Ej. Cremosa con pistacho tostado de Sicilia" class="admin-input" />
+                  <label for="promo-subtitle">Subtítulo o Destacado (opcional)</label>
+                  <input type="text" id="promo-subtitle" placeholder="Ej. Cremosa con centro fundente y compota casera" class="admin-input" />
                 </div>
               </div>
 
-              <div class="form-grid-3">
+              <!-- Día de reparto y Cupos disponibles -->
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="promo-dates">Día en que se repartirá *</label>
+                  <input type="text" id="promo-dates" required placeholder="Ej. Sábado 28 & Domingo 29 de Septiembre" class="admin-input" />
+                </div>
+
+                <div class="form-group">
+                  <label for="promo-slots">Cuántos cupos habrán disponibles *</label>
+                  <input type="number" id="promo-slots" min="1" required placeholder="Ej. 25" class="admin-input" />
+                </div>
+              </div>
+
+              <!-- Precio y Unidad -->
+              <div class="form-grid-2">
                 <div class="form-group">
                   <label for="promo-price">Precio ($) *</label>
-                  <input type="number" id="promo-price" step="0.50" min="1" required placeholder="6.50" class="admin-input" />
+                  <input type="number" id="promo-price" step="0.50" min="0.50" required placeholder="6.50" class="admin-input" />
                 </div>
 
                 <div class="form-group">
-                  <label for="promo-unit">Unidad *</label>
+                  <label for="promo-unit">Unidad de venta</label>
                   <select id="promo-unit" class="admin-input">
                     <option value="/ porción">/ porción</option>
-                    <option value="/ box">/ box</option>
                     <option value="/ unidad">/ unidad</option>
+                    <option value="/ box">/ box</option>
+                    <option value="/ domo">/ domo</option>
                   </select>
                 </div>
-
-                <div class="form-group">
-                  <label for="promo-slots">Cupos Totales *</label>
-                  <input type="number" id="promo-slots" min="1" required placeholder="25" class="admin-input" />
-                </div>
               </div>
 
+              <!-- Descripción -->
               <div class="form-group">
-                <label for="promo-dates">Fechas de la Tanda *</label>
-                <input type="text" id="promo-dates" required placeholder="Ej. Sábado 28 & Domingo 29 Sept" class="admin-input" />
-              </div>
-
-              <div class="form-group">
-                <label for="promo-short-desc">Descripción Breve *</label>
-                <input type="text" id="promo-short-desc" required placeholder="Resumen corto para la tarjeta" class="admin-input" />
-              </div>
-
-              <div class="form-group">
-                <label for="promo-long-desc">Descripción Completa de la Receta *</label>
-                <textarea id="promo-long-desc" rows="3" required placeholder="Cuéntale a tus clientes sobre la textura, preparación y el cariño puesto en este horneado..." class="admin-input"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label for="promo-image">Imagen del Producto</label>
-                <select id="promo-image" class="admin-input">
-                  <option value="/images/tarta-vasca.jpg">Tarta Vasca con Frutos Rojos (Foto Principal)</option>
-                  <option value="/images/tarta-vasca.jpg">Caja Degustación Especial</option>
-                </select>
+                <label for="promo-long-desc">Descripción de la Tanda y Receta *</label>
+                <textarea id="promo-long-desc" rows="4" required placeholder="Describe la textura, ingredientes especiales, compota, horneado o detalles de conservación..." class="admin-input"></textarea>
               </div>
 
               <div id="promo-feedback" class="admin-success-msg" style="display: none;"></div>
 
               <button type="submit" class="btn-publish-promo">
-                <span>✨ Publicar Tanda Inmediatamente</span>
+                <span>✨ Guardar y Publicar Tanda</span>
               </button>
             </form>
           </div>
@@ -245,7 +261,7 @@ import BottomNav from '../components/BottomNav.astro';
 <script>
   import { getCurrentUser, loginAdminWithPassword, changeAdminPassword, logoutUser, isAdminUser } from '../services/auth';
   import { getAllOrders, updateOrderStatus } from '../services/orders';
-  import { getAllPromotions, createPromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
+  import { fetchTandasClient, createPromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
   import type { Order, Promotion } from '../types';
 
   const loginView = document.getElementById('admin-login-view') as HTMLElement;
@@ -383,87 +399,127 @@ import BottomNav from '../components/BottomNav.astro';
     });
   }
 
-  function renderPromotions() {
+  async function renderPromotions() {
     if (!promosContainer) return;
-    const promos = getAllPromotions();
+    try {
+      const promos = await fetchTandasClient(true);
 
-    promosContainer.innerHTML = promos
-      .map((p) => {
-        return `
-          <div class="admin-promo-card">
-            <div class="promo-thumb">
-              <img src="${p.image}" alt="${p.name}" />
-            </div>
-            <div class="promo-info">
-              <h3 class="promo-name">${p.name}</h3>
-              <p class="promo-sub">${p.subtitle}</p>
-              <p class="promo-meta">
-                <strong>$${p.price.toFixed(2)} ${p.unit}</strong> • 
-                Fechas: ${p.batchDates} • 
-                Cupos: ${p.reservedSlots}/${p.totalSlots}
-              </p>
-            </div>
-            <div class="promo-actions">
-              <button type="button" class="btn-toggle-promo ${p.isActive ? 'btn-active' : 'btn-paused'}" data-id="${p.id}">
-                ${p.isActive ? 'Activa' : 'Pausada'}
-              </button>
-              <button type="button" class="btn-delete-promo" data-id="${p.id}">
-                Eliminar
-              </button>
-            </div>
+      if (promos.length === 0) {
+        promosContainer.innerHTML = `
+          <div class="empty-admin-box">
+            <p>No hay tandas registradas aún. Haz clic en 'Publicar Nueva Tanda' para crear la primera tanda en la base de datos.</p>
           </div>
         `;
-      })
-      .join('');
+        return;
+      }
 
-    promosContainer.querySelectorAll('.btn-toggle-promo').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const id = (e.currentTarget as HTMLElement).dataset.id!;
-        togglePromotionStatus(id);
-        renderPromotions();
-      });
-    });
+      promosContainer.innerHTML = promos
+        .map((p) => {
+          return `
+            <div class="admin-promo-card">
+              <div class="promo-thumb">
+                <img src="${p.image}" alt="${p.name}" />
+              </div>
+              <div class="promo-info">
+                <h3 class="promo-name">${p.name}</h3>
+                <p class="promo-sub">${p.subtitle || ''}</p>
+                <p class="promo-meta">
+                  <strong>$${Number(p.price).toFixed(2)} ${p.unit}</strong> • 
+                  📅 Reparto: ${p.deliveryDate || p.batchDates} • 
+                  Cupos: ${p.reservedSlots}/${p.totalSlots}
+                </p>
+              </div>
+              <div class="promo-actions">
+                <button type="button" class="btn-toggle-promo ${p.isActive ? 'btn-active' : 'btn-paused'}" data-id="${p.id}">
+                  ${p.isActive ? 'Activa' : 'Pausada'}
+                </button>
+                <button type="button" class="btn-delete-promo" data-id="${p.id}">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
 
-    promosContainer.querySelectorAll('.btn-delete-promo').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const id = (e.currentTarget as HTMLElement).dataset.id!;
-        if (confirm('¿Deseas eliminar esta promoción?')) {
-          deletePromotion(id);
+      promosContainer.querySelectorAll('.btn-toggle-promo').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = (e.currentTarget as HTMLElement).dataset.id!;
+          await togglePromotionStatus(id);
           renderPromotions();
-        }
+        });
       });
-    });
+
+      promosContainer.querySelectorAll('.btn-delete-promo').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = (e.currentTarget as HTMLElement).dataset.id!;
+          if (confirm('¿Deseas eliminar esta tanda de la base de datos?')) {
+            await deletePromotion(id);
+            renderPromotions();
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Error rendering tandas:', err);
+    }
   }
 
-  // Handle Tab Switch
-  tabButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const tabName = (btn as HTMLElement).dataset.tab;
-      tabButtons.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
+  // Photo Upload Handlers
+  const photoFile = document.getElementById('promo-image-file') as HTMLInputElement;
+  const photoData = document.getElementById('promo-image-data') as HTMLInputElement;
+  const photoUrlInput = document.getElementById('promo-image-url') as HTMLInputElement;
+  const uploadZone = document.getElementById('photo-upload-zone');
+  const uploadPrompt = document.getElementById('upload-prompt');
+  const previewWrap = document.getElementById('upload-preview-wrap');
+  const previewImg = document.getElementById('upload-preview-img') as HTMLImageElement;
+  const btnRemovePhoto = document.getElementById('btn-remove-photo');
 
-      tabContents.forEach((tc) => {
-        if ((tc as HTMLElement).id === `tab-content-${tabName}`) {
-          (tc as HTMLElement).style.display = 'block';
-        } else {
-          (tc as HTMLElement).style.display = 'none';
-        }
-      });
-    });
+  function setPhoto(dataUrl: string) {
+    if (photoData) photoData.value = dataUrl;
+    if (previewImg) previewImg.src = dataUrl;
+    if (uploadPrompt) uploadPrompt.style.display = 'none';
+    if (previewWrap) previewWrap.style.display = 'block';
+  }
+
+  function clearPhoto() {
+    if (photoFile) photoFile.value = '';
+    if (photoData) photoData.value = '';
+    if (photoUrlInput) photoUrlInput.value = '';
+    if (uploadPrompt) uploadPrompt.style.display = 'flex';
+    if (previewWrap) previewWrap.style.display = 'none';
+  }
+
+  uploadZone?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('#btn-remove-photo')) return;
+    photoFile?.click();
   });
 
-  // Filter Buttons
-  document.querySelectorAll('.filter-pills .filter-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.filter-pills .filter-btn').forEach((b) => b.classList.remove('active'));
-      (e.currentTarget as HTMLElement).classList.add('active');
-      currentStatusFilter = (e.currentTarget as HTMLElement).dataset.status || 'all';
-      renderOrders();
-    });
+  photoFile?.addEventListener('change', () => {
+    const file = photoFile.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setPhoto(result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  photoUrlInput?.addEventListener('input', () => {
+    const url = photoUrlInput.value.trim();
+    if (url) {
+      setPhoto(url);
+    }
+  });
+
+  btnRemovePhoto?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearPhoto();
   });
 
   // Create Promo Form Submit
-  createPromoForm?.addEventListener('submit', (e) => {
+  createPromoForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const name = (document.getElementById('promo-name') as HTMLInputElement).value;
@@ -472,32 +528,42 @@ import BottomNav from '../components/BottomNav.astro';
     const unit = (document.getElementById('promo-unit') as HTMLSelectElement).value;
     const totalSlots = parseInt((document.getElementById('promo-slots') as HTMLInputElement).value, 10);
     const batchDates = (document.getElementById('promo-dates') as HTMLInputElement).value;
-    const shortDescription = (document.getElementById('promo-short-desc') as HTMLInputElement).value;
     const longDescription = (document.getElementById('promo-long-desc') as HTMLTextAreaElement).value;
-    const image = (document.getElementById('promo-image') as HTMLSelectElement).value;
+    const image = (document.getElementById('promo-image-data') as HTMLInputElement).value ||
+                  (document.getElementById('promo-image-url') as HTMLInputElement).value;
 
-    createPromotion({
-      name,
-      subtitle,
-      price,
-      unit,
-      totalSlots,
-      batchDates,
-      shortDescription,
-      longDescription,
-      image
-    });
+    if (!image) {
+      alert('Por favor agrega una foto para la tanda (puedes seleccionarla desde tu dispositivo o ingresar un enlace)');
+      return;
+    }
 
-    if (promoFeedback) {
-      promoFeedback.textContent = '¡Tanda y promoción publicada con éxito! Ya está disponible en el catálogo.';
-      promoFeedback.style.display = 'block';
-      setTimeout(() => {
-        promoFeedback.style.display = 'none';
-        createPromoForm.reset();
-        // Switch to manage tab
-        const manageTab = document.querySelector('[data-tab="manage-promos"]') as HTMLButtonElement;
-        manageTab?.click();
-      }, 1200);
+    try {
+      await createPromotion({
+        name,
+        subtitle,
+        price,
+        unit,
+        totalSlots,
+        batchDates,
+        shortDescription: longDescription.slice(0, 120),
+        longDescription,
+        image
+      });
+
+      if (promoFeedback) {
+        promoFeedback.textContent = '¡Tanda guardada en la base de datos y publicada con éxito!';
+        promoFeedback.style.display = 'block';
+        setTimeout(() => {
+          promoFeedback.style.display = 'none';
+          createPromoForm.reset();
+          clearPhoto();
+          // Switch to manage tab
+          const manageTab = document.querySelector('[data-tab="manage-promos"]') as HTMLButtonElement;
+          manageTab?.click();
+        }, 1200);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error al guardar la tanda');
     }
   });
 
@@ -653,6 +719,101 @@ import BottomNav from '../components/BottomNav.astro';
 
   .btn-toggle-pwd:hover {
     opacity: 1;
+  }
+
+  /* Photo Upload Styles */
+  .photo-upload-zone {
+    border: 2px dashed var(--color-outline-variant);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-container-low);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .photo-upload-zone:hover {
+    border-color: var(--color-primary);
+    background-color: #fff9f0;
+  }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  .upload-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .upload-icon {
+    font-size: 2.2rem;
+  }
+
+  .upload-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-secondary-dark);
+  }
+
+  .upload-hint {
+    font-size: 0.775rem;
+    color: var(--color-on-surface-muted);
+  }
+
+  .upload-preview-wrap {
+    position: relative;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .upload-preview-img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-remove-photo {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: rgba(29, 28, 23, 0.75);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-full);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-remove-photo:hover {
+    background-color: #c92a2a;
+  }
+
+  .url-fallback-row {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .url-fallback-row small {
+    font-size: 0.75rem;
+    color: var(--color-on-surface-muted);
+  }
+
+  .input-sm {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
   }
 
   .admin-error {

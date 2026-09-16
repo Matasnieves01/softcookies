@@ -43,12 +43,16 @@ export interface Promotion {
   image: string;
   shortDescription: string;
   longDescription: string;
-  details: string[];
-  ingredients: string[];
-  batchDates: string;
+  details?: string[];
+  ingredients?: string[];
+  batchDates: string; // Día que se repartirá
+  deliveryDate?: string;
   locations: string[];
   totalSlots: number;
   reservedSlots: number;
   isActive: boolean;
   createdAt: string;
 }
+
+export type Tanda = Promotion;
+

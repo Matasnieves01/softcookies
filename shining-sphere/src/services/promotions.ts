@@ -1,42 +1,27 @@
-import type { Promotion } from '../types';
-import { products as defaultProducts } from '../data/products';
+import type { Promotion, Tanda } from '../types';
+import {
+  getTandasFromDb,
+  getTandaBySlugFromDb,
+  insertTandaToDb,
+  toggleTandaStatusInDb,
+  deleteTandaFromDb,
+  fetchTandasClient,
+  createTandaClient,
+  toggleTandaClient,
+  deleteTandaClient
+} from './tandas';
 
 const PROMOTIONS_KEY = 'softcookies_promotions';
 
-function seedDefaultPromotions(): Promotion[] {
-  return defaultProducts.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    subtitle: p.subtitle,
-    price: p.price,
-    unit: p.unit,
-    image: p.image,
-    shortDescription: p.shortDescription,
-    longDescription: p.longDescription,
-    details: p.details,
-    ingredients: p.ingredients,
-    batchDates: p.batchDates,
-    locations: p.locations,
-    totalSlots: p.totalSlots,
-    reservedSlots: p.reservedSlots,
-    isActive: true,
-    createdAt: new Date().toISOString()
-  }));
-}
-
+// Local storage helper for client fallback
 export function getAllPromotions(): Promotion[] {
-  if (typeof window === 'undefined') return seedDefaultPromotions();
+  if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(PROMOTIONS_KEY);
-  if (!stored) {
-    const initial = seedDefaultPromotions();
-    localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(initial));
-    return initial;
-  }
+  if (!stored) return [];
   try {
     return JSON.parse(stored);
   } catch {
-    return seedDefaultPromotions();
+    return [];
   }
 }
 
@@ -48,69 +33,73 @@ export function getPromotionBySlug(slug: string): Promotion | undefined {
   return getAllPromotions().find((p) => p.slug === slug);
 }
 
-export function createPromotion(data: {
+export async function createPromotion(data: {
   name: string;
-  subtitle: string;
+  subtitle?: string;
   price: number;
   unit?: string;
   image?: string;
-  shortDescription: string;
+  shortDescription?: string;
   longDescription: string;
   batchDates: string;
   locations?: string[];
   totalSlots: number;
-}): Promotion {
-  const all = getAllPromotions();
-  const slug = data.name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  const newPromo: Promotion = {
-    id: 'promo-' + Date.now(),
-    slug: slug + '-' + Math.floor(Math.random() * 1000),
-    name: data.name.trim(),
-    subtitle: data.subtitle.trim(),
+}): Promise<Promotion> {
+  const tanda = await createTandaClient({
+    name: data.name,
+    subtitle: data.subtitle || '',
     price: data.price,
     unit: data.unit || '/ porción',
     image: data.image || '/images/tarta-vasca.jpg',
-    shortDescription: data.shortDescription.trim(),
-    longDescription: data.longDescription.trim(),
-    details: [
-      'Elaboración artesanal por tanda limitada',
-      'Ingredientes frescos y naturales seleccionados',
-      'Empaque protector individual para máxima frescura'
-    ],
-    ingredients: ['Receta especial de la Chef', 'Mantequilla pura', 'Ingredientes seleccionados'],
-    batchDates: data.batchDates.trim(),
-    locations: data.locations && data.locations.length ? data.locations : ['Tierras Altas', 'Bugaba', 'David'],
-    totalSlots: data.totalSlots,
-    reservedSlots: 0,
-    isActive: true,
-    createdAt: new Date().toISOString()
-  };
+    shortDescription: data.shortDescription || '',
+    longDescription: data.longDescription,
+    deliveryDate: data.batchDates,
+    locations: data.locations,
+    totalSlots: data.totalSlots
+  });
 
-  all.unshift(newPromo);
-  localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
-  window.dispatchEvent(new CustomEvent('softcookies:promotions-updated', { detail: newPromo }));
-  return newPromo;
+  // Keep local storage synced for instant UI reactivity
+  if (typeof window !== 'undefined') {
+    const all = getAllPromotions();
+    all.unshift(tanda);
+    localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('softcookies:promotions-updated', { detail: tanda }));
+  }
+
+  return tanda;
 }
 
-export function togglePromotionStatus(id: string): void {
-  const all = getAllPromotions();
-  const index = all.findIndex((p) => p.id === id);
-  if (index !== -1) {
-    all[index].isActive = !all[index].isActive;
+export async function togglePromotionStatus(id: string): Promise<void> {
+  await toggleTandaClient(id);
+  if (typeof window !== 'undefined') {
+    const all = getAllPromotions();
+    const index = all.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      all[index].isActive = !all[index].isActive;
+      localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
+      window.dispatchEvent(new CustomEvent('softcookies:promotions-updated'));
+    }
+  }
+}
+
+export async function deletePromotion(id: string): Promise<void> {
+  await deleteTandaClient(id);
+  if (typeof window !== 'undefined') {
+    let all = getAllPromotions();
+    all = all.filter((p) => p.id !== id);
     localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
     window.dispatchEvent(new CustomEvent('softcookies:promotions-updated'));
   }
 }
 
-export function deletePromotion(id: string): void {
-  let all = getAllPromotions();
-  all = all.filter((p) => p.id !== id);
-  localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
-  window.dispatchEvent(new CustomEvent('softcookies:promotions-updated'));
-}
+export {
+  getTandasFromDb,
+  getTandaBySlugFromDb,
+  insertTandaToDb,
+  toggleTandaStatusInDb,
+  deleteTandaFromDb,
+  fetchTandasClient,
+  createTandaClient,
+  toggleTandaClient,
+  deleteTandaClient
+};
