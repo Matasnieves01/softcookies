@@ -1,0 +1,66 @@
+---
+interface Props {
+  title?: string;
+}
+
+const {
+  title = "Tandas Abiertas para Reserva"
+} = Astro.props;
+---
+
+<div class="section-header">
+  <div class="container header-container">
+    <div class="title-wrap">
+      <span class="flame-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="icon-svg" fill="currentColor">
+          <path d="M12 23c-4.97 0-9-4.03-9-9 0-4.04 2.82-7.58 4.79-9.52a1 1 0 0 1 1.48.09c1.69 2.05 3.03 4.29 3.03 6.43 0 .44.06.86.17 1.25.32-.47.74-.91 1.23-1.32 1.95-1.63 3.3-3.8 3.3-6.45a1 1 0 0 1 1.62-.77C20.48 5.24 21 8.35 21 14c0 4.97-4.03 9-9 9zm-2-9c0 1.66 1.34 3 3 3s3-1.34 3-3c0-1.84-1.2-3.48-2.31-4.71C12.72 10.37 10 12.02 10 14z"/>
+        </svg>
+      </span>
+      <h2 class="section-title">{title}</h2>
+    </div>
+  </div>
+</div>
+
+<style>
+  .section-header {
+    padding-top: 1.25rem;
+    padding-bottom: 0.85rem;
+  }
+
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .flame-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+  }
+
+  .icon-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    letter-spacing: -0.01em;
+  }
+
+  @media (min-width: 640px) {
+    .section-title {
+      font-size: 1.35rem;
+    }
+  }
+</style>

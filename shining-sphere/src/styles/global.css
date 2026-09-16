@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+:root {
+  /* Warm Artisanal Bakehouse - Color Tokens */
+  --color-primary: #8d4b00;
+  --color-primary-hover: #733c00;
+  --color-primary-container: #b15f00;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #7f5539;
+  --color-secondary-dark: #4a2810;
+  --color-secondary-container: #ffc6a3;
+  --color-on-secondary-container: #7a5035;
+
+  --color-tertiary: #87495a;
+  --color-tertiary-light: #f4a7b9;
+  --color-tertiary-fixed: #ffd9e0;
+  --color-on-tertiary-fixed: #380a1a;
+  
+  --color-background: #fef9f1;
+  --color-on-background: #1d1c17;
+  
+  --color-surface: #fef9f1;
+  --color-surface-card: #ffffff;
+  --color-surface-container: #f2ede5;
+  --color-surface-container-high: #ece8e0;
+  --color-surface-container-low: #f8f3eb;
+
+  --color-on-surface: #1d1c17;
+  --color-on-surface-variant: #554336;
+  --color-on-surface-muted: #887364;
+
+  --color-outline: #887364;
+  --color-outline-variant: #dbc2b0;
+  --color-border-subtle: rgba(74, 40, 16, 0.08);
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px -2px rgba(74, 40, 16, 0.06);
+  --shadow-hover: 0 8px 26px -4px rgba(141, 75, 0, 0.16);
+  --shadow-float: 0 16px 36px -6px rgba(74, 40, 16, 0.12);
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-full: 9999px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Base Container */
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}

@@ -1,0 +1,81 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TopBanner from '../components/TopBanner.astro';
+import Navbar from '../components/Navbar.astro';
+import HeroGreeting from '../components/HeroGreeting.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import BatchCard from '../components/BatchCard.astro';
+import WeekendPackCard from '../components/WeekendPackCard.astro';
+import Footer from '../components/Footer.astro';
+import BottomNav from '../components/BottomNav.astro';
+---
+
+<Layout 
+  title="Soft Cookies TANDAS • Bakehouse Artesanal"
+  description="Horneadas exclusivas por tanda y promociones especiales de la chef @chelsea.mhm. Reserva tu cupo antes de que se agoten."
+>
+  <!-- Top Announcement -->
+  <TopBanner text="• PROMOS & TANDAS DE SEPTIEMBRE • CUPOS LIMITADOS" />
+
+  <!-- Main Navigation Header -->
+  <Navbar 
+    brandName="Soft Cookies" 
+    instagramHandle="@softcookies.pty" 
+  />
+
+  <main id="main-content">
+    <!-- Hero Greeting & Category Filter Chips -->
+    <HeroGreeting 
+      chefHandle="@chelsea.mhm" 
+      locationText="Tierras Altas, Bugaba y David" 
+    />
+
+    <!-- Section Title -->
+    <SectionHeader 
+      title="Tandas Abiertas para Reserva" 
+    />
+
+    <!-- Featured Batch Card Section -->
+    <section class="batch-section" aria-label="Tanda destacada">
+      <div class="container">
+        <BatchCard 
+          title="Tarta Vasca con Frutos Rojos"
+          subtitle="CREMOSA, TOSTADA Y CON TOPPING CASERO"
+          description="Receta artesanal horneada con centro ultra fundente y compota fresca de frutos rojos silvestres."
+          dateText="Sábado 21 & Domingo 22 Sept"
+          price="$6.50"
+          unit="/ porción"
+          imageSrc="/images/tarta-vasca.jpg"
+          imageAlt="Tarta Vasca horneada con centro cremoso y frutos rojos"
+          reservedCount={17}
+          totalCount={25}
+        />
+      </div>
+    </section>
+
+    <!-- Weekend Pack Promotional Strip -->
+    <WeekendPackCard 
+      title="Caja Degustación 4 Sabores Signature"
+      description="2 Soft Cookies Chunky Chocolate + 1 Red Velvet Cream + 1 Porción de Tarta Vasca artesanal."
+      originalPrice="$16.00"
+      discountPrice="$14.00"
+      unit="/ box"
+    />
+  </main>
+
+  <!-- Site Footer -->
+  <Footer />
+
+  <!-- Mobile Bottom Floating Bar -->
+  <BottomNav activeTab="inicio" />
+</Layout>
+
+<style>
+  main {
+    flex: 1;
+  }
+
+  .batch-section {
+    padding-bottom: 0.5rem;
+  }
+</style>

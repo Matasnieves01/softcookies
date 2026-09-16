@@ -1,0 +1,321 @@
+---
+interface Props {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  dateText?: string;
+  price?: string;
+  unit?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  reservedCount?: number;
+  totalCount?: number;
+}
+
+const {
+  title = "Tarta Vasca con Frutos Rojos",
+  subtitle = "CREMOSA, TOSTADA Y CON TOPPING CASERO",
+  description = "Receta artesanal horneada con centro ultra fundente y compota fresca de frutos rojos silvestres.",
+  dateText = "Sábado 21 & Domingo 22 Sept",
+  price = "$6.50",
+  unit = "/ porción",
+  imageSrc = "/images/tarta-vasca.jpg",
+  imageAlt = "Tarta Vasca con Frutos Rojos y compota casera",
+  reservedCount = 17,
+  totalCount = 25
+} = Astro.props;
+
+const remainingCount = totalCount - reservedCount;
+const progressPercentage = Math.round((reservedCount / totalCount) * 100);
+---
+
+<article class="batch-card" aria-label={`Tanda de ${title}`}>
+  <div class="card-grid">
+    <!-- Visual Showcase Column (Clean without stickers or floating badges) -->
+    <div class="visual-col">
+      <div class="image-wrapper">
+        <img 
+          src={imageSrc} 
+          alt={imageAlt} 
+          class="product-image"
+          loading="lazy"
+        />
+      </div>
+    </div>
+
+    <!-- Details and Reservation Column -->
+    <div class="details-col">
+      <!-- Top Price Row (Desktop/Mobile unified) -->
+      <div class="price-header">
+        <div class="price-tag">
+          <span class="price-val">{price}</span>
+          <span class="price-unit">{unit}</span>
+        </div>
+      </div>
+
+      <!-- Titles & Description -->
+      <div class="title-section">
+        <h3 class="product-title">{title}</h3>
+        <p class="product-subtitle">{subtitle}</p>
+        <p class="product-description">{description}</p>
+      </div>
+
+      <!-- Schedule Meta -->
+      <div class="date-chip">
+        <svg viewBox="0 0 24 24" class="chip-calendar-icon" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>{dateText}</span>
+      </div>
+
+      <!-- Scarcity & Progress Tracker -->
+      <div class="scarcity-box">
+        <div class="scarcity-labels">
+          <span class="remaining-text">
+            <span class="fire-emoji">🔥</span> Solo quedan {remainingCount} cupos
+          </span>
+          <span class="reserved-text">{reservedCount} de {totalCount} reservados</span>
+        </div>
+
+        <div class="progress-track" role="progressbar" aria-valuenow={reservedCount} aria-valuemin="0" aria-valuemax={totalCount}>
+          <div class="progress-bar" style={`width: ${progressPercentage}%`}></div>
+        </div>
+      </div>
+
+      <!-- Main Action Button -->
+      <a href="/producto/tarta-vasca" class="cta-button" id="btn-reservar-tarta">
+        <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Ver detalles y reservar</span>
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .batch-card {
+    background-color: var(--color-surface-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  @media (min-width: 768px) {
+    .batch-card {
+      padding: 1.5rem;
+      border-radius: var(--radius-xl);
+    }
+  }
+
+  .batch-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 900px) {
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 2rem;
+    }
+  }
+
+  /* Image Column */
+  .visual-col {
+    width: 100%;
+  }
+
+  .image-wrapper {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: #f7ede3;
+    aspect-ratio: 4 / 3;
+    box-shadow: 0 4px 12px rgba(74, 40, 16, 0.08);
+  }
+
+  @media (min-width: 768px) {
+    .image-wrapper {
+      border-radius: var(--radius-lg);
+    }
+  }
+
+  .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .batch-card:hover .product-image {
+    transform: scale(1.03);
+  }
+
+  /* Details Column */
+  .details-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .price-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+  }
+
+  .price-tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+
+  .price-val {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .price-unit {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-on-surface-muted);
+  }
+
+  .title-section {
+    margin-bottom: 0.85rem;
+  }
+
+  .product-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+  }
+
+  @media (min-width: 640px) {
+    .product-title {
+      font-size: 1.7rem;
+    }
+  }
+
+  .product-subtitle {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--color-tertiary);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .product-description {
+    font-size: 0.925rem;
+    line-height: 1.5;
+    color: var(--color-on-surface-variant);
+  }
+
+  .date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: var(--color-secondary-dark);
+    margin-bottom: 1.25rem;
+  }
+
+  .chip-calendar-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-primary);
+  }
+
+  /* Scarcity & Progress Tracker */
+  .scarcity-box {
+    margin-bottom: 1.25rem;
+  }
+
+  .scarcity-labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .remaining-text {
+    color: var(--color-error);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .fire-emoji {
+    font-size: 0.9rem;
+  }
+
+  .reserved-text {
+    color: var(--color-on-surface-muted);
+    font-weight: 600;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background-color: var(--color-surface-container-high);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ba1a1a 0%, #d93838 100%);
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+  }
+
+  /* CTA Button */
+  .cta-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.95rem 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 14px rgba(141, 75, 0, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  .cta-button:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(141, 75, 0, 0.35);
+  }
+
+  .btn-check-icon {
+    width: 18px;
+    height: 18px;
+  }
+</style>

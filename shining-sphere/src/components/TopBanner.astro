@@ -1,0 +1,41 @@
+---
+interface Props {
+  text?: string;
+}
+
+const { text = "• PROMOS & TANDAS DE SEPTIEMBRE • CUPOS LIMITADOS" } = Astro.props;
+---
+
+<aside class="top-banner" aria-label="Aviso de promociones">
+  <div class="container">
+    <p class="banner-text">{text}</p>
+  </div>
+</aside>
+
+<style>
+  .top-banner {
+    background-color: var(--color-surface-container);
+    border-bottom: 1px solid var(--color-border-subtle);
+    padding: 0.5rem 1rem;
+    text-align: center;
+  }
+
+  .banner-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .banner-text {
+      font-size: 0.8125rem;
+      letter-spacing: 0.1em;
+    }
+  }
+</style>

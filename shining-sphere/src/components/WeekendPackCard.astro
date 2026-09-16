@@ -1,0 +1,165 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  originalPrice?: string;
+  discountPrice?: string;
+  unit?: string;
+}
+
+const {
+  title = "Caja Degustación 4 Sabores Signature",
+  description = "Incluye 2 Soft Cookies Chunky Chocolate, 1 Red Velvet Cream y 1 Porción de Tarta Vasca artesanal.",
+  originalPrice = "$16.00",
+  discountPrice = "$14.00",
+  unit = "/ box"
+} = Astro.props;
+---
+
+<div class="weekend-pack-section">
+  <div class="container">
+    <div class="pack-card">
+      <div class="pack-body">
+        <div class="pack-text">
+          <h4 class="pack-title">{title}</h4>
+          <p class="pack-description">{description}</p>
+        </div>
+
+        <div class="pack-actions-wrap">
+          <div class="price-container">
+            <span class="original-price">{originalPrice}</span>
+            <span class="discount-price">{discountPrice}</span>
+            <span class="price-unit">{unit}</span>
+          </div>
+
+          <a href="/producto/pack-fin-de-semana" class="btn-pack-reserve">
+            <span>Aprovechar Pack</span>
+            <svg viewBox="0 0 24 24" class="arrow-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .weekend-pack-section {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .pack-card {
+    background-color: var(--color-surface-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  @media (min-width: 768px) {
+    .pack-card {
+      border-radius: var(--radius-xl);
+      padding: 1.5rem 2rem;
+    }
+  }
+
+  .pack-card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .pack-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .pack-body {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .pack-text {
+    max-width: 580px;
+  }
+
+  .pack-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.35rem;
+  }
+
+  .pack-description {
+    font-size: 0.9rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.5;
+  }
+
+  .pack-actions-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .price-container {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+  }
+
+  .original-price {
+    font-size: 0.95rem;
+    text-decoration: line-through;
+    color: var(--color-on-surface-muted);
+    font-weight: 600;
+  }
+
+  .discount-price {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-primary);
+  }
+
+  .price-unit {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-on-surface-muted);
+  }
+
+  .btn-pack-reserve {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container-low);
+    color: var(--color-primary);
+    border: 1px solid var(--color-outline-variant);
+    font-size: 0.875rem;
+    font-weight: 800;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-pack-reserve:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(141, 75, 0, 0.2);
+  }
+
+  .arrow-icon {
+    width: 16px;
+    height: 16px;
+  }
+</style>

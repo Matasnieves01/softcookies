@@ -1,0 +1,984 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import TopBanner from '../../components/TopBanner.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import BottomNav from '../../components/BottomNav.astro';
+import { products, type Product } from '../../data/products';
+
+export function getStaticPaths() {
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const remainingSlots = product.totalSlots - product.reservedSlots;
+---
+
+<Layout 
+  title={`${product.name} | Reservas Soft Cookies`}
+  description={product.shortDescription}
+>
+  <TopBanner text="• RESERVAS DE TANDA • CUPOS LIMITADOS" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+
+  <main class="product-page">
+    <div class="container">
+      <!-- Breadcrumb / Back Link -->
+      <nav class="breadcrumb-nav" aria-label="Navegación secundaria">
+        <a href="/" class="back-link">
+          <svg viewBox="0 0 24 24" class="back-arrow-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Volver al menú</span>
+        </a>
+      </nav>
+
+      <div class="product-grid">
+        <!-- Columna Izquierda: Información del Producto -->
+        <section class="product-info-col" aria-label="Detalles del producto">
+          <div class="main-image-card">
+            <img 
+              src={product.image} 
+              alt={product.name} 
+              class="product-main-img" 
+            />
+          </div>
+
+          <header class="product-header-block">
+            <h1 class="product-title">{product.name}</h1>
+            <p class="product-subtitle">{product.subtitle}</p>
+            
+            <div class="price-badge-row">
+              <span class="price-amount">${product.price.toFixed(2)}</span>
+              <span class="price-unit">{product.unit}</span>
+            </div>
+          </header>
+
+          <div class="info-card batch-schedule-card">
+            <div class="schedule-item">
+              <span class="schedule-icon">📅</span>
+              <div>
+                <strong>Fecha de entrega:</strong>
+                <p>{product.batchDates}</p>
+              </div>
+            </div>
+
+            <div class="schedule-item">
+              <span class="schedule-icon">📍</span>
+              <div>
+                <strong>Zonas de entrega:</strong>
+                <p>{product.locations.join(' • ')}</p>
+              </div>
+            </div>
+
+            <div class="scarcity-indicator">
+              <div class="scarcity-label-row">
+                <span class="slots-left">🔥 Solo quedan {remainingSlots} cupos</span>
+                <span class="slots-total">{product.reservedSlots} de {product.totalSlots} reservados</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style={`width: ${(product.reservedSlots / product.totalSlots) * 100}%`}></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Descripción detallada -->
+          <article class="info-card description-card">
+            <h2 class="card-title">Sobre esta receta artesanal</h2>
+            <p class="description-text">{product.longDescription}</p>
+
+            <h3 class="subsection-title">Detalles y conservación:</h3>
+            <ul class="styled-list">
+              {product.details.map((detail) => (
+                <li>
+                  <span class="list-check">✓</span>
+                  <span>{detail}</span>
+                </li>
+              ))}
+            </ul>
+
+            <h3 class="subsection-title">Ingredientes principales:</h3>
+            <div class="ingredients-tags">
+              {product.ingredients.map((ing) => (
+                <span class="ingredient-pill">{ing}</span>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <!-- Columna Derecha: Formulario de Reserva -->
+        <aside class="reservation-col" aria-label="Formulario de reserva">
+          <div class="reservation-card">
+            <h2 class="form-title">Reserva tu pedido</h2>
+            <p class="form-subtitle">
+              Selecciona la cantidad que deseas y déjanos tu número para confirmar tu cupo por WhatsApp.
+            </p>
+
+            <form id="reservation-form" class="reservation-form" data-unit-price={product.price} data-product-name={product.name}>
+              <!-- Selector de Cantidad -->
+              <div class="form-group">
+                <label class="field-label" for="qty-input">¿Cuántos deseas ordenar?</label>
+                <div class="quantity-controller">
+                  <button type="button" class="qty-btn" id="btn-minus" aria-label="Disminuir cantidad">
+                    <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <input 
+                    type="number" 
+                    id="qty-input" 
+                    name="quantity" 
+                    value="1" 
+                    min="1" 
+                    max={remainingSlots} 
+                    readonly 
+                    class="qty-display"
+                    aria-live="polite"
+                  />
+                  <button type="button" class="qty-btn" id="btn-plus" aria-label="Aumentar cantidad">
+                    <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Nombre del cliente -->
+              <div class="form-group">
+                <label class="field-label" for="customer-name">Tu nombre y apellido <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="customer-name" 
+                  name="customerName" 
+                  placeholder="Ej. Chelsea Morales" 
+                  required 
+                  class="text-input"
+                />
+              </div>
+
+              <!-- Número de contacto -->
+              <div class="form-group">
+                <label class="field-label" for="customer-phone">Número de contacto (WhatsApp) <span class="required">*</span></label>
+                <div class="phone-input-wrap">
+                  <span class="country-prefix">+507</span>
+                  <input 
+                    type="tel" 
+                    id="customer-phone" 
+                    name="customerPhone" 
+                    placeholder="6000-0000" 
+                    pattern="[0-9\s-]{7,15}"
+                    required 
+                    class="text-input phone-input"
+                  />
+                </div>
+                <span class="field-help">Te escribiremos a este número para coordinar la hora y punto de entrega.</span>
+              </div>
+
+              <!-- Punto de entrega / Retiro -->
+              <div class="form-group">
+                <label class="field-label" for="pickup-location">Punto de retiro o entrega <span class="required">*</span></label>
+                <select id="pickup-location" name="pickupLocation" required class="text-input select-input">
+                  <option value="" disabled selected>Selecciona tu zona</option>
+                  <option value="Tierras Altas (Volcán / Bambito)">Tierras Altas (Volcán / Bambito)</option>
+                  <option value="Bugaba (Parque / Punto céntrico)">Bugaba (Parque / Punto céntrico)</option>
+                  <option value="David (Plaza / Delivery)">David (Plaza / Delivery)</option>
+                </select>
+              </div>
+
+              <!-- Notas adicionales -->
+              <div class="form-group">
+                <label class="field-label" for="order-notes">Instrucciones o notas adicionales <span class="optional">(opcional)</span></label>
+                <textarea 
+                  id="order-notes" 
+                  name="orderNotes" 
+                  rows="2" 
+                  placeholder="Ej. Empacar para regalo, o prefiero retirar a las 3:00 PM..." 
+                  class="text-input textarea-input"
+                ></textarea>
+              </div>
+
+              <!-- Resumen de Costo -->
+              <div class="cost-summary">
+                <div class="summary-row">
+                  <span>Precio unitario:</span>
+                  <span>${product.price.toFixed(2)}</span>
+                </div>
+                <div class="summary-row">
+                  <span>Cantidad:</span>
+                  <span id="summary-qty">1</span>
+                </div>
+                <div class="summary-total-row">
+                  <span>Total estimado a pagar:</span>
+                  <span class="total-price-text" id="summary-total">${product.price.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <!-- Botón de Confirmación -->
+              <button type="submit" class="btn-confirm-reserve" id="btn-submit-reservation">
+                <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Confirmar y Enviar Reserva</span>
+              </button>
+            </form>
+
+            <p class="trust-note">
+              🔒 Pago al momento de retirar o por transferencia bancaria / Yappy tras confirmar disponibilidad.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de Éxito al Reservar -->
+  <div id="reservation-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-check-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h3 class="modal-title">¡Reserva Generada con Éxito!</h3>
+      <p class="modal-text" id="modal-summary-text">
+        Tu pedido ha sido preparado. Estamos abriendo WhatsApp para confirmar tu cupo con la chef @chelsea.mhm.
+      </p>
+
+      <div class="modal-actions">
+        <a id="modal-whatsapp-btn" href="#" target="_blank" class="btn-modal-wa">
+          <span>Abrir WhatsApp Ahora</span>
+        </a>
+        <button type="button" id="modal-close-btn" class="btn-modal-close">
+          <span>Cerrar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <Footer />
+  <BottomNav activeTab="tandas" />
+</Layout>
+
+<script>
+  // Client-side interactivity for Quantity & Reservation Submission
+  const form = document.getElementById('reservation-form') as HTMLFormElement;
+  const qtyInput = document.getElementById('qty-input') as HTMLInputElement;
+  const btnMinus = document.getElementById('btn-minus') as HTMLButtonElement;
+  const btnPlus = document.getElementById('btn-plus') as HTMLButtonElement;
+  const summaryQty = document.getElementById('summary-qty') as HTMLElement;
+  const summaryTotal = document.getElementById('summary-total') as HTMLElement;
+  
+  const modal = document.getElementById('reservation-modal') as HTMLElement;
+  const modalSummaryText = document.getElementById('modal-summary-text') as HTMLElement;
+  const modalWhatsappBtn = document.getElementById('modal-whatsapp-btn') as HTMLAnchorElement;
+  const modalCloseBtn = document.getElementById('modal-close-btn') as HTMLButtonElement;
+
+  if (form && qtyInput && btnMinus && btnPlus && summaryQty && summaryTotal) {
+    const unitPrice = parseFloat(form.dataset.unitPrice || "0");
+    const productName = form.dataset.productName || "Pedido";
+    const maxQty = parseInt(qtyInput.getAttribute('max') || "20", 10);
+
+    const updateDisplay = () => {
+      let qty = parseInt(qtyInput.value, 10);
+      if (isNaN(qty) || qty < 1) qty = 1;
+      if (qty > maxQty) qty = maxQty;
+      
+      qtyInput.value = qty.toString();
+      summaryQty.textContent = qty.toString();
+      
+      const total = (qty * unitPrice).toFixed(2);
+      summaryTotal.textContent = `$${total}`;
+    };
+
+    btnMinus.addEventListener('click', () => {
+      let current = parseInt(qtyInput.value, 10);
+      if (current > 1) {
+        qtyInput.value = (current - 1).toString();
+        updateDisplay();
+      }
+    });
+
+    btnPlus.addEventListener('click', () => {
+      let current = parseInt(qtyInput.value, 10);
+      if (current < maxQty) {
+        qtyInput.value = (current + 1).toString();
+        updateDisplay();
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = (document.getElementById('customer-name') as HTMLInputElement).value.trim();
+      const phone = (document.getElementById('customer-phone') as HTMLInputElement).value.trim();
+      const location = (document.getElementById('pickup-location') as HTMLSelectElement).value;
+      const notes = (document.getElementById('order-notes') as HTMLTextAreaElement).value.trim();
+      const qty = qtyInput.value;
+      const total = (parseInt(qty, 10) * unitPrice).toFixed(2);
+
+      // Pre-compose WhatsApp message
+      let message = `¡Hola Chef Chelsea! 👋 Deseo confirmar mi reserva en Soft Cookies:\n\n`;
+      message += `🍰 *Producto:* ${productName}\n`;
+      message += `📦 *Cantidad:* ${qty}\n`;
+      message += `💰 *Total estimado:* $${total}\n\n`;
+      message += `👤 *Nombre:* ${name}\n`;
+      message += `📞 *Teléfono:* +507 ${phone}\n`;
+      message += `📍 *Lugar de entrega:* ${location}\n`;
+      if (notes) {
+        message += `📝 *Notas:* ${notes}\n`;
+      }
+      message += `\n¡Quedo atento a la confirmación de mi cupo! Muchas gracias ✨`;
+
+      const whatsappUrl = `https://wa.me/50760000000?text=${encodeURIComponent(message)}`;
+
+      // Update Modal
+      if (modal && modalSummaryText && modalWhatsappBtn) {
+        modalSummaryText.textContent = `¡Gracias, ${name}! Tu reserva de ${qty}x ${productName} ($${total}) está lista para ser enviada a la chef por WhatsApp.`;
+        modalWhatsappBtn.href = whatsappUrl;
+        modal.classList.add('modal-visible');
+        modal.setAttribute('aria-hidden', 'false');
+
+        // Automatically open WhatsApp in new tab
+        window.open(whatsappUrl, '_blank');
+      }
+    });
+
+    if (modalCloseBtn && modal) {
+      modalCloseBtn.addEventListener('click', () => {
+        modal.classList.remove('modal-visible');
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    }
+  }
+</script>
+
+<style>
+  .product-page {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 1.5rem;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container-low);
+    border: 1px solid var(--color-border-subtle);
+    transition: all 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-primary);
+    background-color: var(--color-surface-container);
+    transform: translateX(-2px);
+  }
+
+  .back-arrow-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Grid Layout */
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (min-width: 960px) {
+    .product-grid {
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 2.5rem;
+    }
+  }
+
+  /* Left Column */
+  .product-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .main-image-card {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background-color: #f7ede3;
+    aspect-ratio: 4 / 3;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  @media (min-width: 768px) {
+    .main-image-card {
+      border-radius: var(--radius-xl);
+    }
+  }
+
+  .product-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-header-block {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+  }
+
+  .product-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+  }
+
+  @media (min-width: 640px) {
+    .product-title {
+      font-size: 2rem;
+    }
+  }
+
+  .product-subtitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .price-badge-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .price-amount {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .price-unit {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-on-surface-muted);
+  }
+
+  /* Info Cards */
+  .info-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+  }
+
+  .batch-schedule-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .schedule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.925rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .schedule-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .schedule-item strong {
+    color: var(--color-on-surface);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .scarcity-indicator {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-surface-container-high);
+  }
+
+  .scarcity-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.825rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .slots-left {
+    color: var(--color-error);
+    font-weight: 800;
+  }
+
+  .slots-total {
+    color: var(--color-on-surface-muted);
+    font-weight: 600;
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background-color: var(--color-surface-container-high);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ba1a1a 0%, #d93838 100%);
+    border-radius: var(--radius-full);
+  }
+
+  .description-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .description-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-on-surface-variant);
+  }
+
+  .subsection-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--color-secondary-dark);
+    margin-top: 0.5rem;
+  }
+
+  .styled-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .styled-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.4;
+  }
+
+  .list-check {
+    color: var(--color-primary);
+    font-weight: 800;
+  }
+
+  .ingredients-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ingredient-pill {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    background-color: var(--color-surface-container-low);
+    border: 1px solid var(--color-outline-variant);
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-full);
+  }
+
+  /* Right Column: Reservation Form */
+  .reservation-col {
+    position: relative;
+  }
+
+  @media (min-width: 960px) {
+    .reservation-card {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+
+  .reservation-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-hover);
+  }
+
+  @media (min-width: 768px) {
+    .reservation-card {
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+    }
+  }
+
+  .form-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.35rem;
+  }
+
+  .form-subtitle {
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.45;
+    margin-bottom: 1.5rem;
+  }
+
+  .reservation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .field-label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .required {
+    color: var(--color-error);
+  }
+
+  .optional {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-on-surface-muted);
+  }
+
+  /* Quantity Controller */
+  .quantity-controller {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid var(--color-outline-variant);
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container-low);
+    overflow: hidden;
+    width: fit-content;
+  }
+
+  .qty-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary-dark);
+    transition: background-color 0.2s ease;
+  }
+
+  .qty-btn:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-primary);
+  }
+
+  .btn-qty-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .qty-display {
+    width: 50px;
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 800;
+    border: none;
+    background: transparent;
+    color: var(--color-on-surface);
+  }
+
+  /* Form Inputs */
+  .text-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    background-color: #fffdf9;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--color-on-surface);
+    transition: all 0.2s ease;
+  }
+
+  .text-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(141, 75, 0, 0.15);
+  }
+
+  .phone-input-wrap {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    background-color: #fffdf9;
+    overflow: hidden;
+  }
+
+  .country-prefix {
+    padding: 0.75rem 0.85rem;
+    background-color: var(--color-surface-container);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--color-secondary);
+    border-right: 1.5px solid var(--color-outline-variant);
+  }
+
+  .phone-input {
+    border: none;
+    border-radius: 0;
+  }
+
+  .phone-input:focus {
+    box-shadow: none;
+  }
+
+  .select-input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f5539' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px;
+    padding-right: 2.5rem;
+  }
+
+  .textarea-input {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .field-help {
+    font-size: 0.75rem;
+    color: var(--color-on-surface-muted);
+    margin-top: 0.15rem;
+  }
+
+  /* Cost Summary */
+  .cost-summary {
+    background-color: var(--color-surface-container-low);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.5rem;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .summary-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--color-outline-variant);
+    font-weight: 800;
+    color: var(--color-on-surface);
+    font-size: 0.95rem;
+  }
+
+  .total-price-text {
+    font-size: 1.45rem;
+    color: var(--color-primary);
+  }
+
+  /* Submit Button */
+  .btn-confirm-reserve {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.95rem 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    box-shadow: 0 4px 14px rgba(141, 75, 0, 0.25);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+  }
+
+  .btn-confirm-reserve:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(141, 75, 0, 0.35);
+  }
+
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .trust-note {
+    font-size: 0.775rem;
+    color: var(--color-on-surface-muted);
+    text-align: center;
+    line-height: 1.4;
+    margin-top: 1rem;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(29, 28, 23, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.modal-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background-color: #ffffff;
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-float);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+  }
+
+  .modal-visible .modal-card {
+    transform: scale(1);
+  }
+
+  .modal-check-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-full);
+    background-color: #e6f7ec;
+    color: #1b8744;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+  }
+
+  .modal-check-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .modal-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-text {
+    font-size: 0.925rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-modal-wa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: var(--radius-full);
+    background-color: #25d366;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-modal-wa:hover {
+    background-color: #1eb857;
+    transform: translateY(-1px);
+  }
+
+  .btn-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-modal-close:hover {
+    background-color: var(--color-surface-container-high);
+  }
+</style>
