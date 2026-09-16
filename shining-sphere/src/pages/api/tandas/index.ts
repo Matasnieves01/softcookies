@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const db = await getCloudflareDb(locals);
-    const body = await request.json();
+    const body = (await request.json()) as any;
 
     const {
       name,

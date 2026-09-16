@@ -20,9 +20,11 @@ let fallbackTandas: Tanda[] = [];
 export async function getCloudflareDb(locals?: any): Promise<any> {
   // 1) Try cloudflare:workers standard module in Astro v6/v7
   try {
-    const cf = await import('cloudflare:workers');
-    if ((cf as any)?.env?.DB) {
-      return (cf as any).env.DB;
+    // @ts-ignore - Virtual module provided by Cloudflare Workers runtime
+    const cf: any = await import('cloudflare:workers');
+    const cloudflareEnv = cf?.env || cf?.default?.env;
+    if (cloudflareEnv?.DB) {
+      return cloudflareEnv.DB;
     }
   } catch {}
 
@@ -255,7 +257,7 @@ export async function fetchTandasClient(all = false): Promise<Tanda[]> {
   try {
     const res = await fetch(`/api/tandas${all ? '?all=true' : ''}`);
     if (!res.ok) throw new Error('Error fetching tandas from server');
-    const data = await res.json();
+    const data: any = await res.json();
     return data.tandas || [];
   } catch (err) {
     console.warn('Fallback fetching client tandas:', err);
@@ -270,10 +272,10 @@ export async function createTandaClient(input: TandaInput): Promise<Tanda> {
     body: JSON.stringify(input)
   });
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
+    const errData: any = await res.json().catch(() => ({}));
     throw new Error(errData.error || 'Error al guardar la tanda en la base de datos');
   }
-  const data = await res.json();
+  const data: any = await res.json();
   return data.tanda;
 }
 
