@@ -13,9 +13,9 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "DB",
+			"binding": "softcookies_db",
 			"database_name": "softcookies-db",
-			"database_id": "softcookies-db"
+			"database_id": "9256a3f7-b281-4b06-a8c5-a8a0ad52ca3d"
 		}
 	]
 }

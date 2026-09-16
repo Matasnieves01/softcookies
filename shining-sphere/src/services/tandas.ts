@@ -23,15 +23,14 @@ export async function getCloudflareDb(locals?: any): Promise<any> {
     // @ts-ignore - Virtual module provided by Cloudflare Workers runtime
     const cf: any = await import('cloudflare:workers');
     const cloudflareEnv = cf?.env || cf?.default?.env;
-    if (cloudflareEnv?.DB) {
-      return cloudflareEnv.DB;
-    }
+    const db = cloudflareEnv?.softcookies_db || cloudflareEnv?.DB;
+    if (db) return db;
   } catch {}
 
   // 2) Try locals if present
   try {
-    if (locals?.runtime?.DB) return locals.runtime.DB;
-    if (locals?.runtime?.env?.DB) return locals.runtime.env.DB;
+    const locDb = locals?.runtime?.softcookies_db || locals?.runtime?.DB || locals?.runtime?.env?.softcookies_db || locals?.runtime?.env?.DB;
+    if (locDb) return locDb;
   } catch {}
 
   return null;

@@ -3,6 +3,7 @@
 // Runtime types generated with workerd@1.20260915.1 2026-09-15 global_fetch_strictly_public
 interface __BaseEnv_Env {
 	DB: D1Database;
+	softcookies_db: D1Database;
 	ASSETS: Fetcher;
 }
 declare namespace Cloudflare {
