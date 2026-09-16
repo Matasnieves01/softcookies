@@ -12,7 +12,9 @@
     </button>
 
     <div class="auth-header">
-      <div class="brand-cookie-badge">🍪</div>
+      <div class="brand-cookie-badge">
+        <img src="/images/logo.jpeg" alt="Soft Cookies" class="auth-logo-img" width="56" height="56" />
+      </div>
       <h2 id="auth-modal-title" class="auth-title">Tu Cuenta Soft Cookies</h2>
       <p class="auth-subtitle">Accede para guardar tus tandas favoritas o consultar tus reservas.</p>
     </div>
@@ -250,8 +252,18 @@
   }
 
   .brand-cookie-badge {
-    font-size: 2.2rem;
-    margin-bottom: 0.25rem;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .auth-logo-img {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(141, 75, 0, 0.16);
+    border: 2px solid rgba(141, 75, 0, 0.15);
   }
 
   .auth-title {

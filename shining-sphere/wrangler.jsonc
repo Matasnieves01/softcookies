@@ -1,7 +1,9 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-09-15",
-	"compatibility_flags": ["global_fetch_strictly_public"],
+	"compatibility_flags": [
+		"global_fetch_strictly_public"
+	],
 	"name": "shining-sphere",
 	"main": "@astrojs/cloudflare/entrypoints/server",
 	"assets": {
@@ -15,7 +17,8 @@
 		{
 			"binding": "softcookies_db",
 			"database_name": "softcookies-db",
-			"database_id": "9256a3f7-b281-4b06-a8c5-a8a0ad52ca3d"
+			"database_id": "9256a3f7-b281-4b06-a8c5-a8a0ad52ca3d",
+			"migrations_dir": "../../migrations"
 		}
 	]
 }
