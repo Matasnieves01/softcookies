@@ -119,10 +119,21 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
           <div class="reservation-card">
             <h2 class="form-title">Reserva tu pedido</h2>
             <p class="form-subtitle">
-              Selecciona la cantidad que deseas y déjanos tu número para confirmar tu cupo por WhatsApp.
+              Selecciona la cantidad que deseas y déjanos tus datos para coordinar tu cupo con la chef.
             </p>
 
-            <form id="reservation-form" class="reservation-form" data-unit-price={product.price} data-product-name={product.name}>
+            <!-- Banner de estado del cliente -->
+            <div id="customer-session-banner" class="session-banner" style="display: none;">
+              <span>👤 Sesión activa: <strong id="logged-user-label"></strong></span>
+              <a href="/cuenta" class="session-link">Mi Historial</a>
+            </div>
+
+            <div id="guest-session-prompt" class="session-prompt">
+              <span>💡 Reservando como invitado.</span>
+              <button type="button" id="btn-open-login-inline" class="session-prompt-btn">¿Ya tienes cuenta? Inicia sesión</button>
+            </div>
+
+            <form id="reservation-form" class="reservation-form" data-unit-price={product.price} data-product-id={product.id} data-product-name={product.name}>
               <!-- Selector de Cantidad -->
               <div class="form-group">
                 <label class="field-label" for="qty-input">¿Cuántos deseas ordenar?</label>
@@ -180,7 +191,26 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
                     class="text-input phone-input"
                   />
                 </div>
-                <span class="field-help">Te escribiremos a este número para coordinar la hora y punto de entrega.</span>
+                <span class="field-help">Te escribiremos a este número para coordinar la entrega.</span>
+              </div>
+
+              <!-- Opción de crear cuenta para invitados -->
+              <div id="guest-account-toggle-wrap" class="guest-toggle-card">
+                <label class="checkbox-flex">
+                  <input type="checkbox" id="chk-create-account" />
+                  <span class="checkbox-text">Crear una cuenta con estos datos para guardar mi pedido en mi historial</span>
+                </label>
+
+                <div id="guest-password-fields" class="guest-extra-fields" style="display: none;">
+                  <div class="form-group">
+                    <label class="field-label" for="guest-email">Correo Electrónico *</label>
+                    <input type="email" id="guest-email" placeholder="tu@correo.com" class="text-input" />
+                  </div>
+                  <div class="form-group">
+                    <label class="field-label" for="guest-pass">Crea una Contraseña *</label>
+                    <input type="password" id="guest-pass" placeholder="Mínimo 6 caracteres" minlength="6" class="text-input" />
+                  </div>
+                </div>
               </div>
 
               <!-- Punto de entrega / Retiro -->
@@ -250,12 +280,15 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
       </div>
       <h3 class="modal-title">¡Reserva Generada con Éxito!</h3>
       <p class="modal-text" id="modal-summary-text">
-        Tu pedido ha sido preparado. Estamos abriendo WhatsApp para confirmar tu cupo con la chef @chelsea.mhm.
+        Tu pedido ha sido preparado y registrado.
       </p>
 
       <div class="modal-actions">
         <a id="modal-whatsapp-btn" href="#" target="_blank" class="btn-modal-wa">
-          <span>Abrir WhatsApp Ahora</span>
+          <span>💬 Enviar Reserva a la Chef por WhatsApp</span>
+        </a>
+        <a href="/cuenta" id="modal-account-link" class="btn-modal-account" style="display: none;">
+          Ver en Mi Cuenta
         </a>
         <button type="button" id="modal-close-btn" class="btn-modal-close">
           <span>Cerrar</span>
@@ -269,21 +302,76 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
 </Layout>
 
 <script>
-  // Client-side interactivity for Quantity & Reservation Submission
+  import { getCurrentUser, registerUser } from '../../services/auth';
+  import { createOrder } from '../../services/orders';
+
   const form = document.getElementById('reservation-form') as HTMLFormElement;
   const qtyInput = document.getElementById('qty-input') as HTMLInputElement;
   const btnMinus = document.getElementById('btn-minus') as HTMLButtonElement;
   const btnPlus = document.getElementById('btn-plus') as HTMLButtonElement;
   const summaryQty = document.getElementById('summary-qty') as HTMLElement;
   const summaryTotal = document.getElementById('summary-total') as HTMLElement;
-  
+
+  const sessionBanner = document.getElementById('customer-session-banner') as HTMLElement;
+  const loggedUserLabel = document.getElementById('logged-user-label') as HTMLElement;
+  const guestPrompt = document.getElementById('guest-session-prompt') as HTMLElement;
+  const btnOpenLogin = document.getElementById('btn-open-login-inline') as HTMLElement;
+
+  const guestToggleWrap = document.getElementById('guest-account-toggle-wrap') as HTMLElement;
+  const chkCreateAccount = document.getElementById('chk-create-account') as HTMLInputElement;
+  const guestPasswordFields = document.getElementById('guest-password-fields') as HTMLElement;
+  const guestEmailInput = document.getElementById('guest-email') as HTMLInputElement;
+  const guestPassInput = document.getElementById('guest-pass') as HTMLInputElement;
+
+  const nameInput = document.getElementById('customer-name') as HTMLInputElement;
+  const phoneInput = document.getElementById('customer-phone') as HTMLInputElement;
+
   const modal = document.getElementById('reservation-modal') as HTMLElement;
   const modalSummaryText = document.getElementById('modal-summary-text') as HTMLElement;
   const modalWhatsappBtn = document.getElementById('modal-whatsapp-btn') as HTMLAnchorElement;
+  const modalAccountLink = document.getElementById('modal-account-link') as HTMLAnchorElement;
   const modalCloseBtn = document.getElementById('modal-close-btn') as HTMLButtonElement;
+
+  function updateCustomerState() {
+    const user = getCurrentUser();
+    if (user) {
+      if (sessionBanner) sessionBanner.style.display = 'flex';
+      if (loggedUserLabel) loggedUserLabel.textContent = user.name;
+      if (guestPrompt) guestPrompt.style.display = 'none';
+      if (guestToggleWrap) guestToggleWrap.style.display = 'none';
+
+      if (nameInput && !nameInput.value) nameInput.value = user.name;
+      if (phoneInput && !phoneInput.value) phoneInput.value = user.phone;
+    } else {
+      if (sessionBanner) sessionBanner.style.display = 'none';
+      if (guestPrompt) guestPrompt.style.display = 'block';
+      if (guestToggleWrap) guestToggleWrap.style.display = 'block';
+    }
+  }
+
+  updateCustomerState();
+  window.addEventListener('softcookies:auth-changed', updateCustomerState);
+
+  btnOpenLogin?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
+  });
+
+  chkCreateAccount?.addEventListener('change', () => {
+    if (guestPasswordFields) {
+      guestPasswordFields.style.display = chkCreateAccount.checked ? 'flex' : 'none';
+      if (chkCreateAccount.checked) {
+        guestEmailInput?.setAttribute('required', 'true');
+        guestPassInput?.setAttribute('required', 'true');
+      } else {
+        guestEmailInput?.removeAttribute('required');
+        guestPassInput?.removeAttribute('required');
+      }
+    }
+  });
 
   if (form && qtyInput && btnMinus && btnPlus && summaryQty && summaryTotal) {
     const unitPrice = parseFloat(form.dataset.unitPrice || "0");
+    const productId = form.dataset.productId || "tarta-vasca";
     const productName = form.dataset.productName || "Pedido";
     const maxQty = parseInt(qtyInput.getAttribute('max') || "20", 10);
 
@@ -318,18 +406,44 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const name = (document.getElementById('customer-name') as HTMLInputElement).value.trim();
-      const phone = (document.getElementById('customer-phone') as HTMLInputElement).value.trim();
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
       const location = (document.getElementById('pickup-location') as HTMLSelectElement).value;
       const notes = (document.getElementById('order-notes') as HTMLTextAreaElement).value.trim();
-      const qty = qtyInput.value;
-      const total = (parseInt(qty, 10) * unitPrice).toFixed(2);
+      const qty = parseInt(qtyInput.value, 10);
+      let currentUser = getCurrentUser();
 
-      // Pre-compose WhatsApp message
-      let message = `¡Hola Chef Chelsea! 👋 Deseo confirmar mi reserva en Soft Cookies:\n\n`;
+      // If guest wants to register account along with order
+      if (!currentUser && chkCreateAccount?.checked) {
+        const email = guestEmailInput.value.trim();
+        const pass = guestPassInput.value;
+        if (email && pass) {
+          try {
+            currentUser = registerUser(name, email, phone, pass);
+          } catch (err: any) {
+            alert(err.message || 'Error al crear la cuenta. La reserva continuará como invitado.');
+          }
+        }
+      }
+
+      // Save order in orders service
+      const createdOrder = createOrder({
+        customerId: currentUser?.id,
+        customerName: name,
+        customerPhone: phone,
+        pickupLocation: location,
+        notes,
+        productId,
+        productName,
+        unitPrice,
+        quantity: qty
+      });
+
+      // WhatsApp Message
+      let message = `¡Hola Chef Chelsea! 👋 Deseo confirmar mi reserva *#${createdOrder.orderNumber}* en Soft Cookies:\n\n`;
       message += `🍰 *Producto:* ${productName}\n`;
       message += `📦 *Cantidad:* ${qty}\n`;
-      message += `💰 *Total estimado:* $${total}\n\n`;
+      message += `💰 *Total estimado:* $${createdOrder.total.toFixed(2)}\n\n`;
       message += `👤 *Nombre:* ${name}\n`;
       message += `📞 *Teléfono:* +507 ${phone}\n`;
       message += `📍 *Lugar de entrega:* ${location}\n`;
@@ -338,12 +452,18 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
       }
       message += `\n¡Quedo atento a la confirmación de mi cupo! Muchas gracias ✨`;
 
-      const whatsappUrl = `https://wa.me/50760000000?text=${encodeURIComponent(message)}`;
+      const cleanPhone = '50760000000'; // Default Soft Cookies / Chef WhatsApp
+      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
       // Update Modal
       if (modal && modalSummaryText && modalWhatsappBtn) {
-        modalSummaryText.textContent = `¡Gracias, ${name}! Tu reserva de ${qty}x ${productName} ($${total}) está lista para ser enviada a la chef por WhatsApp.`;
+        modalSummaryText.textContent = `¡Gracias, ${name}! Tu reserva #${createdOrder.orderNumber} de ${qty}x ${productName} ($${createdOrder.total.toFixed(2)}) ha sido guardada.`;
         modalWhatsappBtn.href = whatsappUrl;
+
+        if (modalAccountLink) {
+          modalAccountLink.style.display = currentUser ? 'inline-flex' : 'none';
+        }
+
         modal.classList.add('modal-visible');
         modal.setAttribute('aria-hidden', 'false');
 
@@ -980,5 +1100,91 @@ const remainingSlots = product.totalSlots - product.reservedSlots;
 
   .btn-modal-close:hover {
     background-color: var(--color-surface-container-high);
+  }
+
+  .btn-modal-account {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-modal-account:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  /* Session & Guest UI */
+  .session-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #e6f7ec;
+    border: 1px solid #b7ebd0;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-md);
+    font-size: 0.825rem;
+    color: #065f46;
+    margin-bottom: 1rem;
+  }
+
+  .session-link {
+    font-weight: 800;
+    text-decoration: underline;
+    color: #065f46;
+  }
+
+  .session-prompt {
+    font-size: 0.8rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .session-prompt-btn {
+    color: var(--color-primary);
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+  }
+
+  .guest-toggle-card {
+    background-color: var(--color-surface-container-low);
+    border: 1px dashed var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+  }
+
+  .checkbox-flex {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .checkbox-text {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: var(--color-secondary-dark);
+    line-height: 1.35;
+  }
+
+  .guest-extra-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border-subtle);
   }
 </style>

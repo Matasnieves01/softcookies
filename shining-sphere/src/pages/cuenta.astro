@@ -1,0 +1,561 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TopBanner from '../components/TopBanner.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import BottomNav from '../components/BottomNav.astro';
+---
+
+<Layout 
+  title="Mi Cuenta | Soft Cookies" 
+  description="Consulta tu perfil de cliente y el estado de tus reservas de tandas en Soft Cookies."
+>
+  <TopBanner text="• MI CUENTA • SOFT COOKIES TANDAS" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+
+  <main class="account-page">
+    <div class="container">
+      <!-- Estado: No autenticado -->
+      <section id="unauthenticated-view" class="auth-fallback-card" style="display: none;">
+        <div class="fallback-icon">🍪</div>
+        <h1 class="fallback-title">Bienvenido a Soft Cookies</h1>
+        <p class="fallback-text">
+          Inicia sesión para ver el historial de tus pedidos o crea tu cuenta para guardar tus datos y reservar tus tandas con mayor facilidad.
+        </p>
+        <div class="fallback-actions">
+          <button type="button" id="btn-trigger-login" class="btn-primary-pill">
+            <span>Iniciar Sesión o Registrarme</span>
+          </button>
+          <a href="/" class="btn-subtle-pill">Volver al Inicio</a>
+        </div>
+      </section>
+
+      <!-- Estado: Autenticado -->
+      <div id="authenticated-view" class="account-dashboard" style="display: none;">
+        <!-- Header Perfil -->
+        <header class="profile-header-card">
+          <div class="profile-user-info">
+            <div class="user-avatar-circle" id="user-avatar">SC</div>
+            <div>
+              <div class="user-name-row">
+                <h1 class="user-name" id="display-name">Cargando...</h1>
+                <span class="role-badge" id="display-role">Cliente</span>
+              </div>
+              <p class="user-contact" id="display-email">email@correo.com</p>
+              <p class="user-contact" id="display-phone">+507 6000-0000</p>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <a href="/admin" id="btn-admin-dashboard" class="btn-admin-pill" style="display: none;">
+              👩‍🍳 Panel de la Chef
+            </a>
+            <button type="button" id="btn-logout" class="btn-logout-pill">
+              Cerrar Sesión
+            </button>
+          </div>
+        </header>
+
+        <!-- Sección de Reservas -->
+        <section class="orders-section" aria-labelledby="orders-title">
+          <div class="section-title-row">
+            <h2 id="orders-title" class="section-heading">Mis Reservas de Tandas</h2>
+            <a href="/" class="btn-new-order">+ Reservar Otra Tanda</a>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-orders" class="empty-orders-card" style="display: none;">
+            <span class="empty-icon">📦</span>
+            <h3>No tienes reservas registradas</h3>
+            <p>Aprovecha las tandas abiertas de este fin de semana antes de que se agoten los cupos.</p>
+            <a href="/" class="btn-primary-pill">Ver Tandas Disponibles</a>
+          </div>
+
+          <!-- Listado de Pedidos -->
+          <div id="orders-list" class="orders-grid"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+  <BottomNav activeTab="perfil" />
+</Layout>
+
+<script>
+  import { getCurrentUser, logoutUser } from '../services/auth';
+  import { getOrdersByUser } from '../services/orders';
+  import type { Order } from '../types';
+
+  const unauthView = document.getElementById('unauthenticated-view') as HTMLElement;
+  const authView = document.getElementById('authenticated-view') as HTMLElement;
+  const triggerLoginBtn = document.getElementById('btn-trigger-login') as HTMLElement;
+  const logoutBtn = document.getElementById('btn-logout') as HTMLElement;
+
+  const displayName = document.getElementById('display-name') as HTMLElement;
+  const displayEmail = document.getElementById('display-email') as HTMLElement;
+  const displayPhone = document.getElementById('display-phone') as HTMLElement;
+  const displayRole = document.getElementById('display-role') as HTMLElement;
+  const userAvatar = document.getElementById('user-avatar') as HTMLElement;
+  const adminBtn = document.getElementById('btn-admin-dashboard') as HTMLElement;
+
+  const emptyOrders = document.getElementById('empty-orders') as HTMLElement;
+  const ordersList = document.getElementById('orders-list') as HTMLElement;
+
+  function renderAccount() {
+    const user = getCurrentUser();
+
+    if (!user) {
+      if (unauthView) unauthView.style.display = 'block';
+      if (authView) authView.style.display = 'none';
+      return;
+    }
+
+    if (unauthView) unauthView.style.display = 'none';
+    if (authView) authView.style.display = 'block';
+
+    // Populate user info
+    if (displayName) displayName.textContent = user.name;
+    if (displayEmail) displayEmail.textContent = user.email;
+    if (displayPhone) displayPhone.textContent = `WhatsApp: +507 ${user.phone}`;
+    if (displayRole) {
+      displayRole.textContent = user.role === 'admin' ? 'Chef Administradora' : 'Cliente Frecuente';
+      displayRole.className = `role-badge ${user.role === 'admin' ? 'role-admin' : 'role-customer'}`;
+    }
+    if (userAvatar) {
+      const initials = user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+      userAvatar.textContent = initials || 'SC';
+    }
+
+    if (adminBtn) {
+      adminBtn.style.display = user.role === 'admin' ? 'inline-flex' : 'none';
+    }
+
+    // Load orders
+    const orders = getOrdersByUser(user.id);
+    if (!orders || orders.length === 0) {
+      if (emptyOrders) emptyOrders.style.display = 'block';
+      if (ordersList) ordersList.innerHTML = '';
+    } else {
+      if (emptyOrders) emptyOrders.style.display = 'none';
+      renderOrders(orders);
+    }
+  }
+
+  function renderOrders(orders: Order[]) {
+    if (!ordersList) return;
+    ordersList.innerHTML = orders
+      .map((order) => {
+        const dateStr = new Date(order.createdAt).toLocaleDateString('es-PA', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+
+        let statusClass = 'status-pending';
+        let statusLabel = 'Pendiente por Confirmar';
+
+        if (order.status === 'confirmed') {
+          statusClass = 'status-confirmed';
+          statusLabel = 'Cupo Confirmado ✓';
+        } else if (order.status === 'delivered') {
+          statusClass = 'status-delivered';
+          statusLabel = 'Entregado';
+        }
+
+        return `
+          <div class="order-card">
+            <div class="order-card-header">
+              <div>
+                <span class="order-code">${order.orderNumber}</span>
+                <span class="order-date">${dateStr}</span>
+              </div>
+              <span class="order-status-badge ${statusClass}">${statusLabel}</span>
+            </div>
+
+            <div class="order-card-body">
+              <h3 class="order-product-name">${order.item.productName}</h3>
+              <p class="order-meta">
+                <strong>Cantidad:</strong> ${order.item.quantity} | 
+                <strong>Total:</strong> $${order.total.toFixed(2)}
+              </p>
+              <p class="order-location">📍 <strong>Entrega:</strong> ${order.pickupLocation}</p>
+              ${order.notes ? `<p class="order-notes">📝 <em>"${order.notes}"</em></p>` : ''}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  // Initial render
+  renderAccount();
+
+  // Listen to auth changes
+  window.addEventListener('softcookies:auth-changed', renderAccount);
+  window.addEventListener('softcookies:orders-updated', renderAccount);
+
+  triggerLoginBtn?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    logoutUser();
+    renderAccount();
+  });
+</script>
+
+<style>
+  .account-page {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+  }
+
+  /* Unauthenticated view */
+  .auth-fallback-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 3rem 2rem;
+    text-align: center;
+    max-width: 580px;
+    margin: 2rem auto;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .fallback-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .fallback-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.5rem;
+  }
+
+  .fallback-text {
+    font-size: 0.95rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.55;
+    margin-bottom: 2rem;
+  }
+
+  .fallback-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  @media (min-width: 500px) {
+    .fallback-actions {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  /* Authenticated Dashboard */
+  .account-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .profile-header-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .profile-header-card {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .profile-user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .user-avatar-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(141, 75, 0, 0.2);
+    flex-shrink: 0;
+  }
+
+  .user-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .user-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .role-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+  }
+
+  .role-customer {
+    background-color: var(--color-surface-container);
+    color: var(--color-secondary-dark);
+  }
+
+  .role-admin {
+    background-color: var(--color-secondary-container);
+    color: var(--color-on-secondary-container);
+  }
+
+  .user-contact {
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .btn-admin-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    transition: all 0.2s ease;
+  }
+
+  .btn-admin-pill:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-logout-pill {
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-outline-variant);
+    background-color: var(--color-surface-container-low);
+    color: var(--color-on-surface-variant);
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .btn-logout-pill:hover {
+    background-color: var(--color-surface-container);
+    color: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  /* Orders Section */
+  .section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-heading {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .btn-new-order {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container-low);
+    border: 1px solid var(--color-outline-variant);
+    transition: all 0.2s ease;
+  }
+
+  .btn-new-order:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  .empty-orders-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .empty-orders-card h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+  }
+
+  .empty-orders-card p {
+    font-size: 0.9rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 1.5rem;
+  }
+
+  .orders-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .orders-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .order-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .order-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--color-surface-container-high);
+  }
+
+  .order-code {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: var(--color-secondary-dark);
+    display: block;
+  }
+
+  .order-date {
+    font-size: 0.75rem;
+    color: var(--color-on-surface-muted);
+  }
+
+  .order-status-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+  }
+
+  .status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-confirmed {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-delivered {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface-muted);
+  }
+
+  .order-product-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.25rem;
+  }
+
+  .order-meta {
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 0.2rem;
+  }
+
+  .order-location {
+    font-size: 0.825rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .order-notes {
+    font-size: 0.8rem;
+    color: var(--color-on-surface-muted);
+    margin-top: 0.35rem;
+  }
+
+  .btn-primary-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary-pill:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-subtle-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+</style>

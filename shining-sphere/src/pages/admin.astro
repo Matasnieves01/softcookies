@@ -1,0 +1,1066 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TopBanner from '../components/TopBanner.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import BottomNav from '../components/BottomNav.astro';
+---
+
+<Layout 
+  title="Panel de la Chef | Soft Cookies Admin" 
+  description="Panel exclusivo para la gestión de tandas, promociones y reservas de clientes de Soft Cookies."
+>
+  <TopBanner text="• PANEL EXCLUSIVO DE ADMINISTRACIÓN • CHEF CHELSEA" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+
+  <main class="admin-page">
+    <div class="container">
+      <!-- Acceso no autorizado (Login de la Chef) -->
+      <section id="admin-login-view" class="admin-auth-card" style="display: none;">
+        <div class="lock-icon">👩‍🍳</div>
+        <h1 class="admin-auth-title">Acceso Chef Administradora</h1>
+        <p class="admin-auth-desc">
+          Este panel está reservado para la chef para publicar nuevas promociones, tandas y gestionar pedidos.
+        </p>
+
+        <form id="admin-login-form" class="admin-form">
+          <div class="form-group">
+            <label for="admin-email">Correo de la Chef</label>
+            <input type="email" id="admin-email" value="chef@softcookies.com" required class="admin-input" />
+          </div>
+
+          <div class="form-group">
+            <label for="admin-pass">Contraseña</label>
+            <input type="password" id="admin-pass" value="admin123" required class="admin-input" />
+          </div>
+
+          <div id="admin-login-error" class="admin-error" style="display: none;"></div>
+
+          <button type="submit" class="btn-admin-submit">
+            <span>Entrar al Panel de Control</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Panel de Control Autorizado -->
+      <div id="admin-dashboard-view" class="admin-dashboard" style="display: none;">
+        <!-- Header del Dashboard -->
+        <header class="admin-header-bar">
+          <div>
+            <span class="admin-welcome-tag">Micro-Bakehouse Admin</span>
+            <h1 class="admin-main-title">Panel de Control de la Chef</h1>
+            <p class="admin-main-sub">Gestiona tus tandas de horneado, publica promociones y revisa los pedidos recibidos.</p>
+          </div>
+
+          <div class="admin-top-actions">
+            <a href="/" class="btn-view-store">Ver Tienda</a>
+            <button type="button" id="btn-admin-logout" class="btn-admin-exit">Salir</button>
+          </div>
+        </header>
+
+        <!-- Métricas Rápidas -->
+        <section class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-icon">📦</span>
+            <div>
+              <span class="metric-value" id="metric-total-orders">0</span>
+              <span class="metric-label">Reservas Recibidas</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-icon">⏳</span>
+            <div>
+              <span class="metric-value" id="metric-pending-orders">0</span>
+              <span class="metric-label">Pendientes por Confirmar</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-icon">💰</span>
+            <div>
+              <span class="metric-value" id="metric-total-revenue">$0.00</span>
+              <span class="metric-label">Total en Reservas</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabs de Navegación del Panel -->
+        <div class="admin-nav-tabs">
+          <button type="button" class="tab-btn active" data-tab="orders">
+            <span>📥 Bandeja de Reservas</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="create-promo">
+            <span>✨ Publicar Nueva Promoción</span>
+          </button>
+          <button type="button" class="tab-btn" data-tab="manage-promos">
+            <span>📋 Tandas y Promociones</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: Bandeja de Reservas -->
+        <section id="tab-content-orders" class="tab-content active">
+          <div class="content-header">
+            <h2 class="content-title">Reservas Entrantes</h2>
+            <div class="filter-pills">
+              <button type="button" class="filter-btn active" data-status="all">Todas</button>
+              <button type="button" class="filter-btn" data-status="pending">Pendientes</button>
+              <button type="button" class="filter-btn" data-status="confirmed">Confirmadas</button>
+            </div>
+          </div>
+
+          <div id="admin-orders-list" class="admin-orders-container"></div>
+        </section>
+
+        <!-- TAB 2: Publicar Nueva Promoción -->
+        <section id="tab-content-create-promo" class="tab-content" style="display: none;">
+          <div class="form-container-card">
+            <div class="form-intro">
+              <h2 class="content-title">Crear Nueva Tanda o Promoción</h2>
+              <p>Completa los datos del producto horneado para que los clientes puedan verlo y reservarlo.</p>
+            </div>
+
+            <form id="create-promo-form" class="create-promo-form">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="promo-name">Nombre del Producto / Tanda *</label>
+                  <input type="text" id="promo-name" required placeholder="Ej. Tarta Vasca de Pistacho" class="admin-input" />
+                </div>
+
+                <div class="form-group">
+                  <label for="promo-subtitle">Subtítulo Artesanal *</label>
+                  <input type="text" id="promo-subtitle" required placeholder="Ej. Cremosa con pistacho tostado de Sicilia" class="admin-input" />
+                </div>
+              </div>
+
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label for="promo-price">Precio ($) *</label>
+                  <input type="number" id="promo-price" step="0.50" min="1" required placeholder="6.50" class="admin-input" />
+                </div>
+
+                <div class="form-group">
+                  <label for="promo-unit">Unidad *</label>
+                  <select id="promo-unit" class="admin-input">
+                    <option value="/ porción">/ porción</option>
+                    <option value="/ box">/ box</option>
+                    <option value="/ unidad">/ unidad</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="promo-slots">Cupos Totales *</label>
+                  <input type="number" id="promo-slots" min="1" required placeholder="25" class="admin-input" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="promo-dates">Fechas de la Tanda *</label>
+                <input type="text" id="promo-dates" required placeholder="Ej. Sábado 28 & Domingo 29 Sept" class="admin-input" />
+              </div>
+
+              <div class="form-group">
+                <label for="promo-short-desc">Descripción Breve *</label>
+                <input type="text" id="promo-short-desc" required placeholder="Resumen corto para la tarjeta" class="admin-input" />
+              </div>
+
+              <div class="form-group">
+                <label for="promo-long-desc">Descripción Completa de la Receta *</label>
+                <textarea id="promo-long-desc" rows="3" required placeholder="Cuéntale a tus clientes sobre la textura, preparación y el cariño puesto en este horneado..." class="admin-input"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="promo-image">Imagen del Producto</label>
+                <select id="promo-image" class="admin-input">
+                  <option value="/images/tarta-vasca.jpg">Tarta Vasca con Frutos Rojos (Foto Principal)</option>
+                  <option value="/images/tarta-vasca.jpg">Caja Degustación Especial</option>
+                </select>
+              </div>
+
+              <div id="promo-feedback" class="admin-success-msg" style="display: none;"></div>
+
+              <button type="submit" class="btn-publish-promo">
+                <span>✨ Publicar Tanda Inmediatamente</span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- TAB 3: Gestionar Promociones -->
+        <section id="tab-content-manage-promos" class="tab-content" style="display: none;">
+          <div class="content-header">
+            <h2 class="content-title">Tandas y Productos en Catálogo</h2>
+          </div>
+
+          <div id="admin-promos-list" class="admin-promos-container"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+  <BottomNav activeTab="perfil" />
+</Layout>
+
+<script>
+  import { getCurrentUser, loginUser, logoutUser, isAdminUser } from '../services/auth';
+  import { getAllOrders, updateOrderStatus } from '../services/orders';
+  import { getAllPromotions, createPromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
+  import type { Order, Promotion } from '../types';
+
+  const loginView = document.getElementById('admin-login-view') as HTMLElement;
+  const dashboardView = document.getElementById('admin-dashboard-view') as HTMLElement;
+  const loginForm = document.getElementById('admin-login-form') as HTMLFormElement;
+  const loginError = document.getElementById('admin-login-error') as HTMLElement;
+  const logoutBtn = document.getElementById('btn-admin-logout') as HTMLElement;
+
+  const metricTotalOrders = document.getElementById('metric-total-orders') as HTMLElement;
+  const metricPendingOrders = document.getElementById('metric-pending-orders') as HTMLElement;
+  const metricTotalRevenue = document.getElementById('metric-total-revenue') as HTMLElement;
+
+  const tabButtons = document.querySelectorAll('.admin-nav-tabs .tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  const ordersContainer = document.getElementById('admin-orders-list') as HTMLElement;
+  const promosContainer = document.getElementById('admin-promos-list') as HTMLElement;
+  const createPromoForm = document.getElementById('create-promo-form') as HTMLFormElement;
+  const promoFeedback = document.getElementById('promo-feedback') as HTMLElement;
+
+  let currentStatusFilter = 'all';
+
+  function initAdmin() {
+    if (!isAdminUser()) {
+      if (loginView) loginView.style.display = 'block';
+      if (dashboardView) dashboardView.style.display = 'none';
+      return;
+    }
+
+    if (loginView) loginView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'block';
+
+    renderDashboard();
+  }
+
+  function renderDashboard() {
+    renderMetrics();
+    renderOrders();
+    renderPromotions();
+  }
+
+  function renderMetrics() {
+    const orders = getAllOrders();
+    const pending = orders.filter((o) => o.status === 'pending').length;
+    const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+
+    if (metricTotalOrders) metricTotalOrders.textContent = orders.length.toString();
+    if (metricPendingOrders) metricPendingOrders.textContent = pending.toString();
+    if (metricTotalRevenue) metricTotalRevenue.textContent = `$${revenue.toFixed(2)}`;
+  }
+
+  function renderOrders() {
+    if (!ordersContainer) return;
+    let orders = getAllOrders();
+
+    if (currentStatusFilter !== 'all') {
+      orders = orders.filter((o) => o.status === currentStatusFilter);
+    }
+
+    if (orders.length === 0) {
+      ordersContainer.innerHTML = `
+        <div class="empty-admin-box">
+          <p>No hay reservas ${currentStatusFilter !== 'all' ? 'con este estado' : 'registradas aún'}.</p>
+        </div>
+      `;
+      return;
+    }
+
+    ordersContainer.innerHTML = orders
+      .map((o) => {
+        const isPending = o.status === 'pending';
+        const isConfirmed = o.status === 'confirmed';
+        const cleanPhone = o.customerPhone.replace(/[^0-9]/g, '');
+        const waLink = `https://wa.me/507${cleanPhone}?text=${encodeURIComponent(
+          `¡Hola ${o.customerName}! Te saluda Chef Chelsea de Soft Cookies respecto a tu reserva ${o.orderNumber} de ${o.item.productName}.`
+        )}`;
+
+        return `
+          <div class="admin-order-card ${isPending ? 'border-pending' : ''}">
+            <div class="order-top-bar">
+              <div>
+                <span class="order-id">${o.orderNumber}</span>
+                <span class="customer-type-tag">${o.customerId ? '👤 Cliente Registrado' : '🏷️ Invitado'}</span>
+              </div>
+              <span class="admin-status-pill status-${o.status}">
+                ${o.status === 'pending' ? 'Pendiente' : o.status === 'confirmed' ? 'Confirmado' : 'Entregado'}
+              </span>
+            </div>
+
+            <div class="order-main-info">
+              <h3 class="order-item-title">${o.item.quantity}x ${o.item.productName}</h3>
+              <p class="order-pricing">Total: <strong>$${o.total.toFixed(2)}</strong> ($${o.item.unitPrice.toFixed(2)} c/u)</p>
+            </div>
+
+            <div class="order-customer-details">
+              <p>👤 <strong>Cliente:</strong> ${o.customerName}</p>
+              <p>📞 <strong>Teléfono:</strong> +507 ${o.customerPhone}</p>
+              <p>📍 <strong>Entrega:</strong> ${o.pickupLocation}</p>
+              ${o.notes ? `<p>📝 <strong>Notas:</strong> "${o.notes}"</p>` : ''}
+            </div>
+
+            <div class="order-actions-bar">
+              <a href="${waLink}" target="_blank" class="btn-wa-chat">
+                <span>💬 Escribir por WhatsApp</span>
+              </a>
+
+              ${
+                isPending
+                  ? `<button type="button" class="btn-status-confirm" data-id="${o.id}">✓ Confirmar Cupo</button>`
+                  : isConfirmed
+                  ? `<button type="button" class="btn-status-deliver" data-id="${o.id}">Marcar Entregado</button>`
+                  : `<span class="badge-done">Listo</span>`
+              }
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    // Attach status change events
+    ordersContainer.querySelectorAll('.btn-status-confirm').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        updateOrderStatus(id, 'confirmed');
+        renderDashboard();
+      });
+    });
+
+    ordersContainer.querySelectorAll('.btn-status-deliver').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        updateOrderStatus(id, 'delivered');
+        renderDashboard();
+      });
+    });
+  }
+
+  function renderPromotions() {
+    if (!promosContainer) return;
+    const promos = getAllPromotions();
+
+    promosContainer.innerHTML = promos
+      .map((p) => {
+        return `
+          <div class="admin-promo-card">
+            <div class="promo-thumb">
+              <img src="${p.image}" alt="${p.name}" />
+            </div>
+            <div class="promo-info">
+              <h3 class="promo-name">${p.name}</h3>
+              <p class="promo-sub">${p.subtitle}</p>
+              <p class="promo-meta">
+                <strong>$${p.price.toFixed(2)} ${p.unit}</strong> • 
+                Fechas: ${p.batchDates} • 
+                Cupos: ${p.reservedSlots}/${p.totalSlots}
+              </p>
+            </div>
+            <div class="promo-actions">
+              <button type="button" class="btn-toggle-promo ${p.isActive ? 'btn-active' : 'btn-paused'}" data-id="${p.id}">
+                ${p.isActive ? 'Activa' : 'Pausada'}
+              </button>
+              <button type="button" class="btn-delete-promo" data-id="${p.id}">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    promosContainer.querySelectorAll('.btn-toggle-promo').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        togglePromotionStatus(id);
+        renderPromotions();
+      });
+    });
+
+    promosContainer.querySelectorAll('.btn-delete-promo').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        if (confirm('¿Deseas eliminar esta promoción?')) {
+          deletePromotion(id);
+          renderPromotions();
+        }
+      });
+    });
+  }
+
+  // Handle Tab Switch
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tabName = (btn as HTMLElement).dataset.tab;
+      tabButtons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      tabContents.forEach((tc) => {
+        if ((tc as HTMLElement).id === `tab-content-${tabName}`) {
+          (tc as HTMLElement).style.display = 'block';
+        } else {
+          (tc as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Filter Buttons
+  document.querySelectorAll('.filter-pills .filter-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.filter-pills .filter-btn').forEach((b) => b.classList.remove('active'));
+      (e.currentTarget as HTMLElement).classList.add('active');
+      currentStatusFilter = (e.currentTarget as HTMLElement).dataset.status || 'all';
+      renderOrders();
+    });
+  });
+
+  // Create Promo Form Submit
+  createPromoForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = (document.getElementById('promo-name') as HTMLInputElement).value;
+    const subtitle = (document.getElementById('promo-subtitle') as HTMLInputElement).value;
+    const price = parseFloat((document.getElementById('promo-price') as HTMLInputElement).value);
+    const unit = (document.getElementById('promo-unit') as HTMLSelectElement).value;
+    const totalSlots = parseInt((document.getElementById('promo-slots') as HTMLInputElement).value, 10);
+    const batchDates = (document.getElementById('promo-dates') as HTMLInputElement).value;
+    const shortDescription = (document.getElementById('promo-short-desc') as HTMLInputElement).value;
+    const longDescription = (document.getElementById('promo-long-desc') as HTMLTextAreaElement).value;
+    const image = (document.getElementById('promo-image') as HTMLSelectElement).value;
+
+    createPromotion({
+      name,
+      subtitle,
+      price,
+      unit,
+      totalSlots,
+      batchDates,
+      shortDescription,
+      longDescription,
+      image
+    });
+
+    if (promoFeedback) {
+      promoFeedback.textContent = '¡Tanda y promoción publicada con éxito! Ya está disponible en el catálogo.';
+      promoFeedback.style.display = 'block';
+      setTimeout(() => {
+        promoFeedback.style.display = 'none';
+        createPromoForm.reset();
+        // Switch to manage tab
+        const manageTab = document.querySelector('[data-tab="manage-promos"]') as HTMLButtonElement;
+        manageTab?.click();
+      }, 1200);
+    }
+  });
+
+  // Admin Login Handle
+  loginForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('admin-email') as HTMLInputElement).value;
+    const pass = (document.getElementById('admin-pass') as HTMLInputElement).value;
+
+    try {
+      const user = loginUser(email, pass);
+      if (user.role !== 'admin') {
+        throw new Error('Esta cuenta no cuenta con permisos de Chef Administradora.');
+      }
+      initAdmin();
+    } catch (err: any) {
+      if (loginError) {
+        loginError.textContent = err.message || 'Error de autenticación';
+        loginError.style.display = 'block';
+      }
+    }
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    logoutUser();
+    initAdmin();
+  });
+
+  // Start
+  initAdmin();
+</script>
+
+<style>
+  .admin-page {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+  }
+
+  /* Admin Login View */
+  .admin-auth-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 3rem 2rem;
+    text-align: center;
+    max-width: 460px;
+    margin: 2rem auto;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .lock-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .admin-auth-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.4rem;
+  }
+
+  .admin-auth-desc {
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 1.5rem;
+    line-height: 1.45;
+  }
+
+  .admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    text-align: left;
+  }
+
+  .admin-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    background-color: #fffdf9;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--color-on-surface);
+  }
+
+  .admin-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(141, 75, 0, 0.15);
+  }
+
+  .admin-error {
+    background-color: var(--color-error-container);
+    color: var(--color-on-error-container);
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-md);
+    font-size: 0.825rem;
+    font-weight: 700;
+  }
+
+  .btn-admin-submit {
+    padding: 0.9rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    transition: all 0.2s ease;
+  }
+
+  .btn-admin-submit:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  /* Admin Dashboard */
+  .admin-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .admin-header-bar {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .admin-header-bar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .admin-welcome-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .admin-main-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .admin-main-sub {
+    font-size: 0.875rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .admin-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .btn-view-store {
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .btn-admin-exit {
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-outline-variant);
+    background: transparent;
+    color: var(--color-error);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  /* Metrics */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .metrics-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .metric-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .metric-icon {
+    font-size: 2.2rem;
+  }
+
+  .metric-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1.1;
+  }
+
+  .metric-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-on-surface-muted);
+  }
+
+  /* Navigation Tabs */
+  .admin-nav-tabs {
+    display: flex;
+    background-color: var(--color-surface-container);
+    padding: 0.35rem;
+    border-radius: var(--radius-full);
+    gap: 0.35rem;
+    overflow-x: auto;
+  }
+
+  .admin-nav-tabs .tab-btn {
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: var(--color-on-surface-variant);
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .admin-nav-tabs .tab-btn.active {
+    background-color: #ffffff;
+    color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(74, 40, 16, 0.08);
+  }
+
+  /* Content */
+  .content-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .content-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .content-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .filter-btn {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 700;
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface-variant);
+  }
+
+  .filter-btn.active {
+    background-color: var(--color-secondary-dark);
+    color: #ffffff;
+  }
+
+  /* Orders Container */
+  .admin-orders-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .admin-orders-container {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .admin-order-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .admin-order-card.border-pending {
+    border-left: 4px solid var(--color-primary);
+  }
+
+  .order-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .order-id {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-secondary-dark);
+    margin-right: 0.5rem;
+  }
+
+  .customer-type-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-on-surface-muted);
+  }
+
+  .admin-status-pill {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+  }
+
+  .status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-confirmed {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-delivered {
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface-muted);
+  }
+
+  .order-item-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .order-pricing {
+    font-size: 0.9rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .order-customer-details {
+    font-size: 0.85rem;
+    color: var(--color-on-surface-variant);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background-color: var(--color-surface-container-low);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+  }
+
+  .order-actions-bar {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+
+  .btn-wa-chat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1rem;
+    background-color: #25d366;
+    color: #ffffff;
+    border-radius: var(--radius-full);
+    font-size: 0.825rem;
+    font-weight: 800;
+    transition: all 0.2s ease;
+  }
+
+  .btn-wa-chat:hover {
+    background-color: #1eb857;
+  }
+
+  .btn-status-confirm {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.825rem;
+    font-weight: 800;
+  }
+
+  .btn-status-deliver {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+    font-size: 0.825rem;
+    font-weight: 700;
+  }
+
+  .badge-done {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: #065f46;
+  }
+
+  /* Form Card */
+  .form-container-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    border: 1px solid var(--color-border-subtle);
+    max-width: 760px;
+    margin: 0 auto;
+    box-shadow: var(--shadow-card);
+  }
+
+  .form-intro {
+    margin-bottom: 1.5rem;
+  }
+
+  .create-promo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .form-grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .form-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .form-grid-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+
+  .btn-publish-promo {
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    box-shadow: 0 4px 14px rgba(141, 75, 0, 0.25);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+  }
+
+  .btn-publish-promo:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .admin-success-msg {
+    padding: 0.75rem 1rem;
+    background-color: #d1fae5;
+    color: #065f46;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  /* Manage Promos */
+  .admin-promos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .admin-promo-card {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .admin-promo-card {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .promo-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .promo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .promo-info {
+    flex: 1;
+  }
+
+  .promo-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+  }
+
+  .promo-sub {
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .promo-meta {
+    font-size: 0.825rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .promo-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-toggle-promo {
+    padding: 0.45rem 0.95rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .btn-active {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .btn-paused {
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface-muted);
+  }
+
+  .btn-delete-promo {
+    padding: 0.45rem 0.95rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-error);
+    background: transparent;
+    color: var(--color-error);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .empty-admin-box {
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    text-align: center;
+    color: var(--color-on-surface-muted);
+  }
+</style>

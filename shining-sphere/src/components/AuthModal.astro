@@ -1,0 +1,426 @@
+---
+// AuthModal.astro
+---
+
+<div id="auth-modal" class="auth-modal-overlay" aria-hidden="true">
+  <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <button type="button" id="auth-modal-close" class="close-btn" aria-label="Cerrar modal">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="auth-header">
+      <div class="brand-cookie-badge">🍪</div>
+      <h2 id="auth-modal-title" class="auth-title">Tu Cuenta Soft Cookies</h2>
+      <p class="auth-subtitle">Accede para guardar tus tandas favoritas o consultar tus reservas.</p>
+    </div>
+
+    <!-- Tabs: Iniciar Sesión / Registrarse -->
+    <div class="auth-tabs" role="tablist">
+      <button type="button" id="tab-login" class="tab-btn active" role="tab" aria-selected="true">
+        Iniciar Sesión
+      </button>
+      <button type="button" id="tab-register" class="tab-btn" role="tab" aria-selected="false">
+        Crear Cuenta
+      </button>
+    </div>
+
+    <div id="auth-feedback" class="auth-feedback" style="display: none;"></div>
+
+    <!-- Formulario Iniciar Sesión -->
+    <form id="login-form" class="auth-form">
+      <div class="form-group">
+        <label for="login-email">Correo Electrónico</label>
+        <input type="email" id="login-email" required placeholder="tu@correo.com" class="input-field" />
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" required placeholder="••••••••" class="input-field" />
+      </div>
+
+      <button type="submit" class="submit-btn" id="btn-submit-login">
+        <span>Ingresar a Mi Cuenta</span>
+      </button>
+    </form>
+
+    <!-- Formulario Registro -->
+    <form id="register-form" class="auth-form" style="display: none;">
+      <div class="form-group">
+        <label for="reg-name">Nombre y Apellido</label>
+        <input type="text" id="reg-name" required placeholder="Ej. Ana Morales" class="input-field" />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-phone">Teléfono (WhatsApp)</label>
+        <input type="tel" id="reg-phone" required placeholder="6000-0000" class="input-field" />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-email">Correo Electrónico</label>
+        <input type="email" id="reg-email" required placeholder="tu@correo.com" class="input-field" />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-password">Crea una Contraseña</label>
+        <input type="password" id="reg-password" required minlength="6" placeholder="Mínimo 6 caracteres" class="input-field" />
+      </div>
+
+      <button type="submit" class="submit-btn" id="btn-submit-register">
+        <span>Crear Mi Cuenta</span>
+      </button>
+    </form>
+
+    <!-- Acceso Rápido Demo Admin -->
+    <div class="admin-demo-access">
+      <p class="demo-title">Acceso de Demostración para la Chef:</p>
+      <button type="button" id="btn-quick-chef" class="chef-demo-btn">
+        <span>👩‍🍳 Ingresar como Chef Admin</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { loginUser, registerUser, getCurrentUser } from '../services/auth';
+
+  const modal = document.getElementById('auth-modal') as HTMLElement;
+  const closeBtn = document.getElementById('auth-modal-close') as HTMLElement;
+  const tabLogin = document.getElementById('tab-login') as HTMLElement;
+  const tabRegister = document.getElementById('tab-register') as HTMLElement;
+  const loginForm = document.getElementById('login-form') as HTMLFormElement;
+  const registerForm = document.getElementById('register-form') as HTMLFormElement;
+  const feedback = document.getElementById('auth-feedback') as HTMLElement;
+  const quickChefBtn = document.getElementById('btn-quick-chef') as HTMLButtonElement;
+
+  function showFeedback(msg: string, isError = true) {
+    if (!feedback) return;
+    feedback.textContent = msg;
+    feedback.style.display = 'block';
+    feedback.className = `auth-feedback ${isError ? 'feedback-error' : 'feedback-success'}`;
+  }
+
+  function clearFeedback() {
+    if (!feedback) return;
+    feedback.style.display = 'none';
+    feedback.textContent = '';
+  }
+
+  if (tabLogin && tabRegister && loginForm && registerForm) {
+    tabLogin.addEventListener('click', () => {
+      clearFeedback();
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.style.display = 'flex';
+      registerForm.style.display = 'none';
+    });
+
+    tabRegister.addEventListener('click', () => {
+      clearFeedback();
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.style.display = 'flex';
+      loginForm.style.display = 'none';
+    });
+  }
+
+  // Open modal event listener
+  window.addEventListener('softcookies:open-auth', () => {
+    if (modal) {
+      clearFeedback();
+      modal.classList.add('modal-visible');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  });
+
+  // Close modal
+  const closeModal = () => {
+    if (modal) {
+      modal.classList.remove('modal-visible');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  };
+
+  closeBtn?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Handle Login Submit
+  loginForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearFeedback();
+    const email = (document.getElementById('login-email') as HTMLInputElement).value;
+    const pass = (document.getElementById('login-password') as HTMLInputElement).value;
+
+    try {
+      const user = loginUser(email, pass);
+      showFeedback(`¡Bienvenida/o, ${user.name}!`, false);
+      setTimeout(() => {
+        closeModal();
+        if (user.role === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/cuenta';
+        }
+      }, 700);
+    } catch (err: any) {
+      showFeedback(err.message || 'Error al iniciar sesión');
+    }
+  });
+
+  // Handle Register Submit
+  registerForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearFeedback();
+    const name = (document.getElementById('reg-name') as HTMLInputElement).value;
+    const phone = (document.getElementById('reg-phone') as HTMLInputElement).value;
+    const email = (document.getElementById('reg-email') as HTMLInputElement).value;
+    const pass = (document.getElementById('reg-password') as HTMLInputElement).value;
+
+    try {
+      const user = registerUser(name, email, phone, pass);
+      showFeedback('¡Cuenta creada con éxito!', false);
+      setTimeout(() => {
+        closeModal();
+        window.location.href = '/cuenta';
+      }, 800);
+    } catch (err: any) {
+      showFeedback(err.message || 'Error al registrar la cuenta');
+    }
+  });
+
+  // Quick Chef Admin Login
+  quickChefBtn?.addEventListener('click', () => {
+    try {
+      const chef = loginUser('chef@softcookies.com', 'admin123');
+      showFeedback('Sesión de Chef iniciada. Redirigiendo...', false);
+      setTimeout(() => {
+        closeModal();
+        window.location.href = '/admin';
+      }, 600);
+    } catch (err: any) {
+      showFeedback(err.message);
+    }
+  });
+</script>
+
+<style>
+  .auth-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(29, 28, 23, 0.65);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .auth-modal-overlay.modal-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .auth-modal-dialog {
+    background-color: #ffffff;
+    border-radius: var(--radius-xl);
+    padding: 2rem 1.75rem;
+    max-width: 440px;
+    width: 100%;
+    position: relative;
+    box-shadow: var(--shadow-float);
+    transform: scale(0.96);
+    transition: transform 0.25s ease;
+  }
+
+  .modal-visible .auth-modal-dialog {
+    transform: scale(1);
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-on-surface-muted);
+    background-color: var(--color-surface-container-low);
+    transition: background-color 0.2s ease;
+  }
+
+  .close-btn:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .brand-cookie-badge {
+    font-size: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .auth-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    margin-bottom: 0.25rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  .auth-tabs {
+    display: flex;
+    background-color: var(--color-surface-container-low);
+    border-radius: var(--radius-full);
+    padding: 0.3rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 0.55rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    color: var(--color-on-surface-muted);
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn.active {
+    background-color: #ffffff;
+    color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(74, 40, 16, 0.08);
+  }
+
+  .auth-feedback {
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .feedback-error {
+    background-color: var(--color-error-container);
+    color: var(--color-on-error-container);
+  }
+
+  .feedback-success {
+    background-color: #e6f7ec;
+    color: #1b8744;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: left;
+  }
+
+  .form-group label {
+    font-size: 0.825rem;
+    font-weight: 800;
+    color: var(--color-secondary-dark);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    background-color: #fffdf9;
+    font-family: inherit;
+    font-size: 0.925rem;
+    color: var(--color-on-surface);
+    transition: all 0.2s ease;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(141, 75, 0, 0.15);
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+    box-shadow: 0 4px 12px rgba(141, 75, 0, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  .submit-btn:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(141, 75, 0, 0.35);
+  }
+
+  .admin-demo-access {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--color-outline-variant);
+    text-align: center;
+  }
+
+  .demo-title {
+    font-size: 0.775rem;
+    color: var(--color-on-surface-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .chef-demo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-surface-container);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: var(--radius-full);
+    font-size: 0.825rem;
+    font-weight: 800;
+    color: var(--color-secondary-dark);
+    transition: all 0.2s ease;
+  }
+
+  .chef-demo-btn:hover {
+    background-color: var(--color-surface-container-high);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+</style>

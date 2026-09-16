@@ -57,16 +57,60 @@ const {
         <span>IG</span>
       </a>
 
-      <button class="btn-pill btn-account" aria-label="Abrir mi cuenta">
+      <!-- Botón de Admin (Visible solo si la chef está autenticada) -->
+      <a href="/admin" id="nav-admin-link" class="btn-pill btn-admin" style="display: none;">
+        <span>👩‍🍳 Admin</span>
+      </a>
+
+      <!-- Botón de Cuenta -->
+      <button type="button" id="nav-account-btn" class="btn-pill btn-account" aria-label="Abrir mi cuenta">
         <svg viewBox="0 0 24 24" class="action-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        <span>Mi Cuenta</span>
+        <span id="nav-account-text">Mi Cuenta</span>
       </button>
     </nav>
   </div>
 </header>
+
+<script>
+  import { getCurrentUser } from '../services/auth';
+
+  const accountBtn = document.getElementById('nav-account-btn');
+  const accountText = document.getElementById('nav-account-text');
+  const adminLink = document.getElementById('nav-admin-link');
+
+  function updateNavAuth() {
+    const user = getCurrentUser();
+    if (user) {
+      if (accountText) {
+        accountText.textContent = user.name.split(' ')[0] || 'Mi Cuenta';
+      }
+      if (adminLink) {
+        adminLink.style.display = user.role === 'admin' ? 'inline-flex' : 'none';
+      }
+    } else {
+      if (accountText) accountText.textContent = 'Mi Cuenta';
+      if (adminLink) adminLink.style.display = 'none';
+    }
+  }
+
+  // Initial check
+  updateNavAuth();
+
+  // Listen to auth changes
+  window.addEventListener('softcookies:auth-changed', updateNavAuth);
+
+  accountBtn?.addEventListener('click', () => {
+    const user = getCurrentUser();
+    if (user) {
+      window.location.href = '/cuenta';
+    } else {
+      window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
+    }
+  });
+</script>
 
 <style>
   .navbar {
@@ -162,7 +206,7 @@ const {
   .nav-actions {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .btn-pill {
@@ -190,6 +234,17 @@ const {
   .btn-subtle {
     min-width: 40px;
     padding: 0.45rem 0.75rem;
+  }
+
+  .btn-admin {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+  }
+
+  .btn-admin:hover {
+    background-color: var(--color-primary-hover);
+    color: #ffffff;
   }
 
   .btn-account {
