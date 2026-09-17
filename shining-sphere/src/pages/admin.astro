@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import TopBanner from '../components/TopBanner.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import BottomNav from '../components/BottomNav.astro';
 ---
 
 <Layout 
@@ -11,7 +10,7 @@ import BottomNav from '../components/BottomNav.astro';
   description="Panel exclusivo para la gestión de tandas, promociones y reservas de clientes de Soft Cookies."
 >
   <TopBanner text="• PANEL EXCLUSIVO DE ADMINISTRACIÓN • CHEF CHELSEA" />
-  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" activeTab="perfil" />
 
   <main class="admin-page">
     <div class="container">
@@ -60,6 +59,9 @@ import BottomNav from '../components/BottomNav.astro';
           </div>
 
           <div class="admin-top-actions">
+            <button type="button" id="btn-admin-create-cta" class="btn-admin-cta">
+              <span>✨ + Crear Tanda</span>
+            </button>
             <a href="/" class="btn-view-store">Ver Tienda</a>
             <button type="button" id="btn-admin-logout" class="btn-admin-exit">Salir</button>
           </div>
@@ -76,10 +78,10 @@ import BottomNav from '../components/BottomNav.astro';
           </div>
 
           <div class="metric-card">
-            <span class="metric-icon">⏳</span>
+            <span class="metric-icon">✓</span>
             <div>
-              <span class="metric-value" id="metric-pending-orders">0</span>
-              <span class="metric-label">Pendientes por Confirmar</span>
+              <span class="metric-value" id="metric-confirmed-orders">0</span>
+              <span class="metric-label">Reservas Activas</span>
             </div>
           </div>
 
@@ -98,10 +100,10 @@ import BottomNav from '../components/BottomNav.astro';
             <span>📥 Bandeja de Reservas</span>
           </button>
           <button type="button" class="tab-btn" data-tab="create-promo">
-            <span>✨ Publicar Nueva Promoción</span>
+            <span>✨ Crear Nueva Tanda</span>
           </button>
           <button type="button" class="tab-btn" data-tab="manage-promos">
-            <span>📋 Tandas y Promociones</span>
+            <span>📋 Gestionar Tandas</span>
           </button>
           <button type="button" class="tab-btn" data-tab="security">
             <span>🔐 Contraseña</span>
@@ -114,8 +116,9 @@ import BottomNav from '../components/BottomNav.astro';
             <h2 class="content-title">Reservas Entrantes</h2>
             <div class="filter-pills">
               <button type="button" class="filter-btn active" data-status="all">Todas</button>
-              <button type="button" class="filter-btn" data-status="pending">Pendientes</button>
               <button type="button" class="filter-btn" data-status="confirmed">Confirmadas</button>
+              <button type="button" class="filter-btn" data-status="delivered">Entregadas</button>
+              <button type="button" class="filter-btn" data-status="cancelled">Canceladas</button>
             </div>
           </div>
 
@@ -151,6 +154,11 @@ import BottomNav from '../components/BottomNav.astro';
                   <small>O si tienes un enlace directo a la imagen:</small>
                   <input type="url" id="promo-image-url" placeholder="https://ejemplo.com/foto.jpg" class="admin-input input-sm" />
                 </div>
+                <div class="photo-presets-row">
+                  <small>Fotos rápidas sugeridas:</small>
+                  <button type="button" class="btn-admin-preset" data-img="/images/tarta-vasca.jpg">🍰 Tarta Vasca</button>
+                  <button type="button" class="btn-admin-preset" data-img="/images/logo.jpeg">🍪 Logo Soft Cookies</button>
+                </div>
               </div>
 
               <!-- Nombre y Subtítulo -->
@@ -169,8 +177,54 @@ import BottomNav from '../components/BottomNav.astro';
               <!-- Día de reparto y Cupos disponibles -->
               <div class="form-grid-2">
                 <div class="form-group">
-                  <label for="promo-dates">Día en que se repartirá *</label>
-                  <input type="text" id="promo-dates" required placeholder="Ej. Sábado 28 & Domingo 29 de Septiembre" class="admin-input" />
+                  <label for="promo-date-picker">Día en que se repartirá *</label>
+                  
+                  <div 
+                    class="calendar-block-trigger" 
+                    id="delivery-date-block" 
+                    tabindex="0" 
+                    role="button" 
+                    aria-label="Abrir calendario para seleccionar fecha de entrega"
+                  >
+                    <!-- Input de fecha nativo cubriendo todo el bloque de forma invisible para soporte nativo y accesibilidad -->
+                    <input 
+                      type="date" 
+                      id="promo-date-picker" 
+                      class="calendar-native-input-overlay" 
+                      required 
+                    />
+
+                    <!-- Contenido visual del bloque -->
+                    <div class="calendar-block-content">
+                      <div class="calendar-block-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                          <line x1="16" x2="16" y1="2" y2="6"/>
+                          <line x1="8" x2="8" y1="2" y2="6"/>
+                          <line x1="3" x2="21" y1="10" y2="10"/>
+                          <path d="M8 14h.01"/>
+                          <path d="M12 14h.01"/>
+                          <path d="M16 14h.01"/>
+                          <path d="M8 18h.01"/>
+                          <path d="M12 18h.01"/>
+                        </svg>
+                      </div>
+
+                      <div class="calendar-block-info">
+                        <span class="calendar-block-title" id="calendar-block-title">Toca aquí para seleccionar día</span>
+                        <span class="calendar-block-subtitle" id="calendar-block-subtitle">Haz clic en cualquier parte del bloque para abrir el calendario</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Valor resultante formateado para la base de datos -->
+                  <input 
+                    type="hidden" 
+                    id="promo-dates" 
+                    name="batchDates" 
+                    required 
+                  />
+                  <small class="field-help-text">💡 Todo el bloque abre el calendario interactivo directamente.</small>
                 </div>
 
                 <div class="form-group">
@@ -215,7 +269,213 @@ import BottomNav from '../components/BottomNav.astro';
         <!-- TAB 3: Gestionar Promociones -->
         <section id="tab-content-manage-promos" class="tab-content" style="display: none;">
           <div class="content-header">
-            <h2 class="content-title">Tandas y Productos en Catálogo</h2>
+            <h2 class="content-title">Tandas y Catálogo de la Chef</h2>
+            <p class="content-desc">Haz clic en <strong>✏️ Modificar</strong> en cualquier tanda para editar sus datos, foto, precio, cupos, fecha de reparto o estado.</p>
+          </div>
+
+          <!-- Modal emergente para Modificar Tanda -->
+          <div 
+            id="edit-tanda-modal" 
+            class="admin-modal-overlay" 
+            style="display: none;" 
+            role="dialog" 
+            aria-modal="true" 
+            aria-labelledby="edit-tanda-heading"
+          >
+            <div class="admin-modal-backdrop" id="modal-tanda-backdrop"></div>
+            
+            <div class="admin-modal-dialog">
+              <!-- Header del Modal -->
+              <div class="admin-modal-header">
+                <div class="modal-title-wrap">
+                  <span class="modal-badge-pill">✏️ Modo Edición</span>
+                  <h3 class="modal-title" id="edit-tanda-heading">Modificar Tanda</h3>
+                  <p class="modal-subtitle">Actualiza los datos, foto, precio, cupos o fecha de reparto</p>
+                </div>
+                <button type="button" id="btn-cancel-edit" class="btn-modal-close" aria-label="Cerrar modal">
+                  ✕
+                </button>
+              </div>
+
+              <!-- Formulario de Edición dentro del cuerpo del modal -->
+              <form id="edit-promo-form" class="admin-modal-form">
+                <div class="admin-modal-body">
+                  <input type="hidden" id="edit-promo-id" />
+
+                  <!-- Foto de la Tanda -->
+                  <div class="form-group photo-upload-group">
+                    <label for="edit-image-file">Foto de la Tanda *</label>
+                    <div class="photo-upload-zone" id="edit-upload-zone">
+                      <input type="file" id="edit-image-file" accept="image/*" class="file-input-hidden" />
+                      <input type="hidden" id="edit-image-data" required />
+                      <div id="edit-upload-prompt" class="upload-prompt" style="display: none;">
+                        <span class="upload-icon">📷</span>
+                        <span class="upload-text">Selecciona una foto nueva de tu producto</span>
+                        <span class="upload-hint">Haz clic o arrastra una imagen</span>
+                      </div>
+                      <div id="edit-upload-preview-wrap" class="upload-preview-wrap">
+                        <img id="edit-preview-img" src="" alt="Previsualización" class="upload-preview-img" />
+                        <button type="button" id="btn-edit-change-photo" class="btn-remove-photo" title="Cambiar foto">✕ Cambiar foto</button>
+                      </div>
+                    </div>
+                    <div class="url-fallback-row">
+                      <small>O si tienes un enlace directo a la imagen:</small>
+                      <input type="url" id="edit-image-url" placeholder="https://ejemplo.com/foto.jpg" class="admin-input input-sm" />
+                    </div>
+                    <div class="photo-presets-row">
+                      <small>Fotos rápidas sugeridas:</small>
+                      <button type="button" class="btn-admin-preset btn-edit-preset" data-img="/images/tarta-vasca.jpg">🍰 Tarta Vasca</button>
+                      <button type="button" class="btn-admin-preset btn-edit-preset" data-img="/images/logo.jpeg">🍪 Logo Soft Cookies</button>
+                    </div>
+                  </div>
+
+                  <!-- Nombre y Subtítulo -->
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label for="edit-promo-name">Nombre de la Tanda / Producto *</label>
+                      <input type="text" id="edit-promo-name" required class="admin-input" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="edit-promo-subtitle">Subtítulo o Destacado (opcional)</label>
+                      <input type="text" id="edit-promo-subtitle" class="admin-input" />
+                    </div>
+                  </div>
+
+                  <!-- Día de reparto y Cupos -->
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label for="edit-date-picker">Día en que se repartirá *</label>
+                      
+                      <div 
+                        class="calendar-block-trigger" 
+                        id="edit-delivery-date-block" 
+                        tabindex="0" 
+                        role="button" 
+                        aria-label="Abrir calendario para cambiar fecha de entrega"
+                      >
+                        <input 
+                          type="date" 
+                          id="edit-date-picker" 
+                          class="calendar-native-input-overlay" 
+                        />
+
+                        <div class="calendar-block-content">
+                          <div class="calendar-block-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                              <line x1="16" y1="2" x2="16" y2="6"/>
+                              <line x1="8" y1="2" x2="8" y2="6"/>
+                              <line x1="3" y1="21" x2="21" y2="10"/>
+                              <path d="M8 14h.01"/>
+                              <path d="M12 14h.01"/>
+                              <path d="M16 14h.01"/>
+                              <path d="M8 18h.01"/>
+                              <path d="M12 18h.01"/>
+                            </svg>
+                          </div>
+
+                          <div class="calendar-block-info">
+                            <span class="calendar-block-title" id="edit-calendar-title">Seleccionar día</span>
+                            <span class="calendar-block-subtitle" id="edit-calendar-subtitle">Haz clic en el bloque para abrir el calendario interactivo</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <input 
+                        type="hidden" 
+                        id="edit-promo-dates" 
+                        required 
+                      />
+                      <small class="field-help-text">💡 Todo el bloque abre el calendario interactivo.</small>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="edit-promo-slots">Total de Cupos Disponibles *</label>
+                      <input type="number" id="edit-promo-slots" min="1" required class="admin-input" />
+                    </div>
+                  </div>
+
+                  <!-- Precio, Unidad y Cupos Reservados -->
+                  <div class="form-grid-3">
+                    <div class="form-group">
+                      <label for="edit-promo-price">Precio ($) *</label>
+                      <input type="number" id="edit-promo-price" step="0.50" min="0.50" required class="admin-input" />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="edit-promo-unit">Unidad de venta</label>
+                      <select id="edit-promo-unit" class="admin-input">
+                        <option value="/ porción">/ porción</option>
+                        <option value="/ unidad">/ unidad</option>
+                        <option value="/ box">/ box</option>
+                        <option value="/ domo">/ domo</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="edit-reserved-slots">Cupos ya reservados</label>
+                      <input type="number" id="edit-reserved-slots" min="0" class="admin-input" />
+                    </div>
+                  </div>
+
+                  <!-- Descripción -->
+                  <div class="form-group">
+                    <label for="edit-promo-long-desc">Descripción de la Tanda y Receta *</label>
+                    <textarea id="edit-promo-long-desc" rows="4" required class="admin-input"></textarea>
+                  </div>
+
+                  <!-- Estado Activa / Pausada -->
+                  <div class="form-group">
+                    <label for="edit-promo-status">Estado de la Tanda en el Catálogo</label>
+                    <select id="edit-promo-status" class="admin-input">
+                      <option value="true">🟢 Activa (Visible para reserva en el Inicio)</option>
+                      <option value="false">⏸️ Pausada (Oculta del catálogo público)</option>
+                    </select>
+                  </div>
+
+                  <div id="edit-promo-feedback" class="admin-success-msg" style="display: none;"></div>
+                </div>
+
+                <!-- Footer del Modal -->
+                <div class="admin-modal-footer">
+                  <button type="button" id="btn-cancel-edit-bottom" class="btn-modal-cancel">
+                    <span>✕ Cancelar</span>
+                  </button>
+                  <button type="submit" class="btn-publish-promo btn-save-changes">
+                    <span>💾 Guardar Cambios</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Modal de Confirmación y Alertas con Diseño Artesanal -->
+          <div 
+            id="admin-confirm-modal" 
+            class="admin-modal-overlay" 
+            style="display: none;" 
+            role="dialog" 
+            aria-modal="true" 
+            aria-labelledby="confirm-modal-title"
+          >
+            <div class="admin-modal-backdrop" id="confirm-modal-backdrop"></div>
+            <div class="confirm-modal-dialog">
+              <div class="confirm-modal-icon-wrap" id="confirm-modal-icon-wrap">
+                <span class="confirm-modal-icon" id="confirm-modal-icon">🗑️</span>
+              </div>
+              <h3 class="confirm-modal-title" id="confirm-modal-title">¿Eliminar esta tanda?</h3>
+              <p class="confirm-modal-desc" id="confirm-modal-desc">¿Deseas eliminar esta tanda de la base de datos? Esta acción no se puede deshacer.</p>
+              
+              <div class="confirm-modal-actions">
+                <button type="button" id="confirm-modal-btn-cancel" class="btn-confirm-cancel">
+                  Cancelar
+                </button>
+                <button type="button" id="confirm-modal-btn-action" class="btn-confirm-danger">
+                  <span id="confirm-modal-action-text">Sí, Eliminar</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div id="admin-promos-list" class="admin-promos-container"></div>
@@ -255,13 +515,12 @@ import BottomNav from '../components/BottomNav.astro';
   </main>
 
   <Footer />
-  <BottomNav activeTab="perfil" />
 </Layout>
 
 <script>
   import { getCurrentUser, loginAdminWithPassword, changeAdminPassword, logoutUser, isAdminUser } from '../services/auth';
-  import { getAllOrders, updateOrderStatus } from '../services/orders';
-  import { fetchTandasClient, createPromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
+  import { getAllOrders, updateOrderStatus, getActiveReservedSlotsForProduct } from '../services/orders';
+  import { fetchTandasClient, createPromotion, updatePromotion, togglePromotionStatus, deletePromotion } from '../services/promotions';
   import type { Order, Promotion } from '../types';
 
   const loginView = document.getElementById('admin-login-view') as HTMLElement;
@@ -271,7 +530,7 @@ import BottomNav from '../components/BottomNav.astro';
   const logoutBtn = document.getElementById('btn-admin-logout') as HTMLElement;
 
   const metricTotalOrders = document.getElementById('metric-total-orders') as HTMLElement;
-  const metricPendingOrders = document.getElementById('metric-pending-orders') as HTMLElement;
+  const metricConfirmedOrders = document.getElementById('metric-confirmed-orders') as HTMLElement;
   const metricTotalRevenue = document.getElementById('metric-total-revenue') as HTMLElement;
 
   const tabButtons = document.querySelectorAll('.admin-nav-tabs .tab-btn');
@@ -282,9 +541,185 @@ import BottomNav from '../components/BottomNav.astro';
   const createPromoForm = document.getElementById('create-promo-form') as HTMLFormElement;
   const promoFeedback = document.getElementById('promo-feedback') as HTMLElement;
 
-  let currentStatusFilter = 'all';
+  // Edit Tanda Modal Elements
+  const editTandaModal = document.getElementById('edit-tanda-modal') as HTMLElement;
+  const modalTandaBackdrop = document.getElementById('modal-tanda-backdrop') as HTMLElement;
+  const editTandaHeading = document.getElementById('edit-tanda-heading') as HTMLElement;
+  const editPromoForm = document.getElementById('edit-promo-form') as HTMLFormElement;
+  const editPromoId = document.getElementById('edit-promo-id') as HTMLInputElement;
+  const editPromoName = document.getElementById('edit-promo-name') as HTMLInputElement;
+  const editPromoSubtitle = document.getElementById('edit-promo-subtitle') as HTMLInputElement;
+  const editPromoPrice = document.getElementById('edit-promo-price') as HTMLInputElement;
+  const editPromoUnit = document.getElementById('edit-promo-unit') as HTMLSelectElement;
+  const editPromoSlots = document.getElementById('edit-promo-slots') as HTMLInputElement;
+  const editReservedSlots = document.getElementById('edit-reserved-slots') as HTMLInputElement;
+  const editPromoDatesInput = document.getElementById('edit-promo-dates') as HTMLInputElement;
+  const editPromoLongDesc = document.getElementById('edit-promo-long-desc') as HTMLTextAreaElement;
+  const editPromoStatus = document.getElementById('edit-promo-status') as HTMLSelectElement;
+  const editPromoFeedback = document.getElementById('edit-promo-feedback') as HTMLElement;
+  const btnCancelEdit = document.getElementById('btn-cancel-edit');
+  const btnCancelEditBottom = document.getElementById('btn-cancel-edit-bottom');
+
+  // Edit Photo Elements
+  const editPhotoFile = document.getElementById('edit-image-file') as HTMLInputElement;
+  const editPhotoData = document.getElementById('edit-image-data') as HTMLInputElement;
+  const editPhotoUrlInput = document.getElementById('edit-image-url') as HTMLInputElement;
+  const editUploadZone = document.getElementById('edit-upload-zone');
+  const editUploadPrompt = document.getElementById('edit-upload-prompt');
+  const editPreviewWrap = document.getElementById('edit-upload-preview-wrap');
+  const editPreviewImg = document.getElementById('edit-preview-img') as HTMLImageElement;
+  const btnEditChangePhoto = document.getElementById('btn-edit-change-photo');
+
+  // Edit Calendar Elements
+  const editDateBlock = document.getElementById('edit-delivery-date-block');
+  const editDatePicker = document.getElementById('edit-date-picker') as HTMLInputElement;
+  const editCalendarTitle = document.getElementById('edit-calendar-title');
+  const editCalendarSubtitle = document.getElementById('edit-calendar-subtitle');
+
+  // Confirm and Alert Modal Elements
+  const confirmModal = document.getElementById('admin-confirm-modal') as HTMLElement;
+  const confirmModalBackdrop = document.getElementById('confirm-modal-backdrop');
+  const confirmModalTitle = document.getElementById('confirm-modal-title');
+  const confirmModalDesc = document.getElementById('confirm-modal-desc');
+  const confirmModalIcon = document.getElementById('confirm-modal-icon');
+  const confirmModalIconWrap = document.getElementById('confirm-modal-icon-wrap');
+  const confirmModalBtnCancel = document.getElementById('confirm-modal-btn-cancel') as HTMLElement;
+  const confirmModalBtnAction = document.getElementById('confirm-modal-btn-action') as HTMLElement;
+  const confirmModalActionText = document.getElementById('confirm-modal-action-text');
+
+  let confirmResolve: ((value: boolean) => void) | null = null;
+
+  function showConfirmDialog(options: {
+    title?: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+    icon?: string;
+  }): Promise<boolean> {
+    return new Promise((resolve) => {
+      confirmResolve = resolve;
+
+      if (confirmModalTitle) confirmModalTitle.textContent = options.title || '¿Estás seguro?';
+      if (confirmModalDesc) confirmModalDesc.innerHTML = options.message;
+      if (confirmModalIcon) confirmModalIcon.textContent = options.icon || (options.isDanger !== false ? '🗑️' : '❓');
+      if (confirmModalActionText) confirmModalActionText.textContent = options.confirmText || 'Confirmar';
+      if (confirmModalBtnCancel) {
+        confirmModalBtnCancel.style.display = 'block';
+        confirmModalBtnCancel.textContent = options.cancelText || 'Cancelar';
+      }
+
+      if (confirmModalIconWrap) {
+        confirmModalIconWrap.className = 'confirm-modal-icon-wrap' + (options.isDanger !== false ? '' : ' is-info');
+      }
+
+      if (confirmModalBtnAction) {
+        confirmModalBtnAction.className = options.isDanger !== false ? 'btn-confirm-danger' : 'btn-confirm-primary';
+      }
+
+      if (confirmModal) {
+        confirmModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
+  function showAlertDialog(message: string, title: string = 'Atención', icon: string = '⚠️'): Promise<boolean> {
+    return new Promise((resolve) => {
+      confirmResolve = resolve;
+
+      if (confirmModalTitle) confirmModalTitle.textContent = title;
+      if (confirmModalDesc) confirmModalDesc.innerHTML = message;
+      if (confirmModalIcon) confirmModalIcon.textContent = icon;
+      if (confirmModalActionText) confirmModalActionText.textContent = 'Entendido';
+      if (confirmModalBtnCancel) confirmModalBtnCancel.style.display = 'none';
+
+      if (confirmModalIconWrap) {
+        confirmModalIconWrap.className = 'confirm-modal-icon-wrap is-warning';
+      }
+
+      if (confirmModalBtnAction) {
+        confirmModalBtnAction.className = 'btn-confirm-primary';
+      }
+
+      if (confirmModal) {
+        confirmModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
+  function closeConfirmDialog(result: boolean) {
+    if (confirmModal) {
+      confirmModal.style.display = 'none';
+      if (!editTandaModal || editTandaModal.style.display !== 'flex') {
+        document.body.style.overflow = '';
+      }
+    }
+    if (confirmResolve) {
+      confirmResolve(result);
+      confirmResolve = null;
+    }
+  }
+
+  confirmModalBtnCancel?.addEventListener('click', () => closeConfirmDialog(false));
+  confirmModalBtnAction?.addEventListener('click', () => closeConfirmDialog(true));
+  confirmModal?.addEventListener('click', (e) => {
+    if (e.target === confirmModal || e.target === confirmModalBackdrop) {
+      closeConfirmDialog(false);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && confirmModal && confirmModal.style.display === 'flex') {
+      closeConfirmDialog(false);
+    }
+  });
+
+  let selectedTandaId: string | null = null;
+  let allLoadedPromos: Promotion[] = [];
+  let currentStatusFilter: string = 'all';
+
+  function switchTab(targetTab: string) {
+    tabButtons.forEach((btn) => {
+      const isTarget = (btn as HTMLElement).dataset.tab === targetTab;
+      btn.classList.toggle('active', isTarget);
+    });
+    tabContents.forEach((c) => {
+      const content = c as HTMLElement;
+      if (content.id === `tab-content-${targetTab}`) {
+        content.style.display = 'block';
+        content.classList.add('active');
+      } else {
+        content.style.display = 'none';
+        content.classList.remove('active');
+      }
+    });
+    if (targetTab === 'manage-promos') renderPromotions();
+  }
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetTab = (btn as HTMLElement).dataset.tab;
+      if (targetTab) switchTab(targetTab);
+    });
+  });
+
+  // Filter pills for orders
+  document.querySelectorAll('.filter-pills .filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pills .filter-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentStatusFilter = (btn as HTMLElement).dataset.status || 'all';
+      renderOrders();
+    });
+  });
 
   function initAdmin() {
+    if (loginError) {
+      loginError.style.display = 'none';
+      loginError.textContent = '';
+    }
+
     if (!isAdminUser()) {
       if (loginView) loginView.style.display = 'block';
       if (dashboardView) dashboardView.style.display = 'none';
@@ -295,6 +730,13 @@ import BottomNav from '../components/BottomNav.astro';
     if (dashboardView) dashboardView.style.display = 'block';
 
     renderDashboard();
+
+    // Check if opened with ?tab=create-promo or hash
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedTab = urlParams.get('tab') || window.location.hash.replace('#', '');
+    if (requestedTab && ['orders', 'create-promo', 'manage-promos', 'security'].includes(requestedTab)) {
+      switchTab(requestedTab);
+    }
   }
 
   function renderDashboard() {
@@ -305,11 +747,11 @@ import BottomNav from '../components/BottomNav.astro';
 
   function renderMetrics() {
     const orders = getAllOrders();
-    const pending = orders.filter((o) => o.status === 'pending').length;
-    const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+    const confirmed = orders.filter((o) => o.status === 'confirmed' || o.status === 'pending').length;
+    const revenue = orders.filter((o) => o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0);
 
     if (metricTotalOrders) metricTotalOrders.textContent = orders.length.toString();
-    if (metricPendingOrders) metricPendingOrders.textContent = pending.toString();
+    if (metricConfirmedOrders) metricConfirmedOrders.textContent = confirmed.toString();
     if (metricTotalRevenue) metricTotalRevenue.textContent = `$${revenue.toFixed(2)}`;
   }
 
@@ -318,7 +760,12 @@ import BottomNav from '../components/BottomNav.astro';
     let orders = getAllOrders();
 
     if (currentStatusFilter !== 'all') {
-      orders = orders.filter((o) => o.status === currentStatusFilter);
+      if (currentStatusFilter === 'confirmed') {
+        // Treat both confirmed and any legacy pending as active confirmed
+        orders = orders.filter((o) => o.status === 'confirmed' || o.status === 'pending');
+      } else {
+        orders = orders.filter((o) => o.status === currentStatusFilter);
+      }
     }
 
     if (orders.length === 0) {
@@ -332,22 +779,34 @@ import BottomNav from '../components/BottomNav.astro';
 
     ordersContainer.innerHTML = orders
       .map((o) => {
-        const isPending = o.status === 'pending';
-        const isConfirmed = o.status === 'confirmed';
+        const isDelivered = o.status === 'delivered';
+        const isCancelled = o.status === 'cancelled';
+        const isConfirmed = o.status === 'confirmed' || o.status === 'pending';
         const cleanPhone = o.customerPhone.replace(/[^0-9]/g, '');
         const waLink = `https://wa.me/507${cleanPhone}?text=${encodeURIComponent(
           `¡Hola ${o.customerName}! Te saluda Chef Chelsea de Soft Cookies respecto a tu reserva ${o.orderNumber} de ${o.item.productName}.`
         )}`;
 
+        let statusClass = 'status-confirmed';
+        let statusLabel = 'Confirmado ✓';
+
+        if (isDelivered) {
+          statusClass = 'status-delivered';
+          statusLabel = 'Entregado ✓';
+        } else if (isCancelled) {
+          statusClass = 'status-cancelled';
+          statusLabel = 'Cancelada ✕';
+        }
+
         return `
-          <div class="admin-order-card ${isPending ? 'border-pending' : ''}">
+          <div class="admin-order-card ${isCancelled ? 'border-cancelled' : ''}">
             <div class="order-top-bar">
               <div>
                 <span class="order-id">${o.orderNumber}</span>
                 <span class="customer-type-tag">${o.customerId ? '👤 Cliente Registrado' : '🏷️ Invitado'}</span>
               </div>
-              <span class="admin-status-pill status-${o.status}">
-                ${o.status === 'pending' ? 'Pendiente' : o.status === 'confirmed' ? 'Confirmado' : 'Entregado'}
+              <span class="admin-status-pill ${statusClass}">
+                ${statusLabel}
               </span>
             </div>
 
@@ -369,11 +828,11 @@ import BottomNav from '../components/BottomNav.astro';
               </a>
 
               ${
-                isPending
-                  ? `<button type="button" class="btn-status-confirm" data-id="${o.id}">✓ Confirmar Cupo</button>`
-                  : isConfirmed
-                  ? `<button type="button" class="btn-status-deliver" data-id="${o.id}">Marcar Entregado</button>`
-                  : `<span class="badge-done">Listo</span>`
+                isConfirmed
+                  ? `<button type="button" class="btn-status-deliver" data-id="${o.id}">✓ Marcar Entregado</button>`
+                  : isDelivered
+                  ? `<span class="badge-done">Entregado ✓</span>`
+                  : `<span class="badge-cancelled" style="color: var(--color-error); font-weight: 700; font-size: 0.825rem;">Cancelada ✕</span>`
               }
             </div>
           </div>
@@ -381,15 +840,7 @@ import BottomNav from '../components/BottomNav.astro';
       })
       .join('');
 
-    // Attach status change events
-    ordersContainer.querySelectorAll('.btn-status-confirm').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const id = (e.currentTarget as HTMLElement).dataset.id!;
-        updateOrderStatus(id, 'confirmed');
-        renderDashboard();
-      });
-    });
-
+    // Attach deliver status change events
     ordersContainer.querySelectorAll('.btn-status-deliver').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).dataset.id!;
@@ -399,15 +850,88 @@ import BottomNav from '../components/BottomNav.astro';
     });
   }
 
+  function openEditTanda(id: string) {
+    const tanda = allLoadedPromos.find((p) => p.id === id);
+    if (!tanda) return;
+
+    selectedTandaId = id;
+    if (editTandaHeading) editTandaHeading.textContent = `Modificar: ${tanda.name}`;
+    if (editPromoId) editPromoId.value = tanda.id;
+    if (editPromoName) editPromoName.value = tanda.name;
+    if (editPromoSubtitle) editPromoSubtitle.value = tanda.subtitle || '';
+    if (editPromoPrice) editPromoPrice.value = Number(tanda.price).toString();
+    const activeOrderSlots = getActiveReservedSlotsForProduct(tanda.id, tanda.name, tanda.slug, allLoadedPromos.length);
+    const effectiveReserved = Math.max(tanda.reservedSlots || 0, activeOrderSlots);
+    if (editReservedSlots) editReservedSlots.value = effectiveReserved.toString();
+    if (editPromoDatesInput) editPromoDatesInput.value = tanda.deliveryDate || tanda.batchDates || '';
+    if (editPromoLongDesc) editPromoLongDesc.value = tanda.longDescription || tanda.shortDescription || '';
+    if (editPromoStatus) editPromoStatus.value = tanda.isActive ? 'true' : 'false';
+
+    // Calendar UI display
+    if (editCalendarTitle) editCalendarTitle.textContent = tanda.deliveryDate || tanda.batchDates || 'Seleccionar día';
+    if (editCalendarSubtitle) editCalendarSubtitle.textContent = 'Haz clic en el bloque para cambiar el día en el calendario';
+    editDateBlock?.classList.add('has-selected-date');
+    if (editDatePicker) editDatePicker.value = '';
+
+    // Photo preview
+    if (editPhotoData) editPhotoData.value = tanda.image;
+    if (editPreviewImg) editPreviewImg.src = tanda.image;
+    if (editUploadPrompt) editUploadPrompt.style.display = 'none';
+    if (editPreviewWrap) editPreviewWrap.style.display = 'block';
+    if (editPhotoUrlInput) editPhotoUrlInput.value = '';
+
+    // Show Modal Dialog
+    if (editTandaModal) {
+      editTandaModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Highlight selected card
+    promosContainer?.querySelectorAll('.admin-promo-card').forEach((c) => {
+      const cardEl = c as HTMLElement;
+      cardEl.classList.toggle('is-selected', cardEl.dataset.id === id);
+    });
+  }
+
+  function closeEditTanda() {
+    selectedTandaId = null;
+    if (editTandaModal) {
+      editTandaModal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    promosContainer?.querySelectorAll('.admin-promo-card').forEach((c) => {
+      (c as HTMLElement).classList.remove('is-selected');
+    });
+  }
+
+  btnCancelEdit?.addEventListener('click', closeEditTanda);
+  btnCancelEditBottom?.addEventListener('click', closeEditTanda);
+
+  // Close modal when clicking on backdrop
+  editTandaModal?.addEventListener('click', (e) => {
+    if (e.target === editTandaModal || e.target === modalTandaBackdrop) {
+      closeEditTanda();
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && editTandaModal && editTandaModal.style.display === 'flex') {
+      closeEditTanda();
+    }
+  });
+
   async function renderPromotions() {
     if (!promosContainer) return;
     try {
       const promos = await fetchTandasClient(true);
+      allLoadedPromos = promos;
 
       if (promos.length === 0) {
+        closeEditTanda();
         promosContainer.innerHTML = `
           <div class="empty-admin-box">
-            <p>No hay tandas registradas aún. Haz clic en 'Publicar Nueva Tanda' para crear la primera tanda en la base de datos.</p>
+            <p>No hay tandas registradas aún. Haz clic en 'Crear Nueva Tanda' para publicar la primera tanda en el catálogo.</p>
           </div>
         `;
         return;
@@ -415,35 +939,90 @@ import BottomNav from '../components/BottomNav.astro';
 
       promosContainer.innerHTML = promos
         .map((p) => {
+          const isSelected = p.id === selectedTandaId;
+          const activeOrderSlots = getActiveReservedSlotsForProduct(p.id, p.name, p.slug, promos.length);
+          const effectiveReserved = Math.max(p.reservedSlots || 0, activeOrderSlots);
+          const remaining = Math.max(0, p.totalSlots - effectiveReserved);
+          const isSoldOut = remaining <= 0;
+          const progressPercent = isSoldOut ? 100 : Math.min(100, Math.round((effectiveReserved / p.totalSlots) * 100));
+
           return `
-            <div class="admin-promo-card">
-              <div class="promo-thumb">
+            <div class="admin-promo-card ${isSelected ? 'is-selected' : ''}" data-id="${p.id}">
+              <!-- Contenedor Visual de Foto -->
+              <div class="promo-card-visual">
                 <img src="${p.image}" alt="${p.name}" />
+                <span class="promo-badge-overlay ${!p.isActive ? 'badge-paused' : isSoldOut ? 'badge-soldout' : 'badge-active'}">
+                  ${!p.isActive ? '⏸️ Pausada' : isSoldOut ? '🚫 Agotada' : '● Activa'}
+                </span>
               </div>
-              <div class="promo-info">
-                <h3 class="promo-name">${p.name}</h3>
-                <p class="promo-sub">${p.subtitle || ''}</p>
-                <p class="promo-meta">
-                  <strong>$${Number(p.price).toFixed(2)} ${p.unit}</strong> • 
-                  📅 Reparto: ${p.deliveryDate || p.batchDates} • 
-                  Cupos: ${p.reservedSlots}/${p.totalSlots}
-                </p>
-              </div>
-              <div class="promo-actions">
-                <button type="button" class="btn-toggle-promo ${p.isActive ? 'btn-active' : 'btn-paused'}" data-id="${p.id}">
-                  ${p.isActive ? 'Activa' : 'Pausada'}
-                </button>
-                <button type="button" class="btn-delete-promo" data-id="${p.id}">
-                  Eliminar
-                </button>
+
+              <!-- Contenido Completo de la Tanda -->
+              <div class="promo-card-body">
+                <div class="promo-main-meta">
+                  <div class="promo-header-line">
+                    <h3 class="promo-title">${p.name}</h3>
+                  </div>
+                  ${p.subtitle ? `<p class="promo-subtitle">${p.subtitle}</p>` : ''}
+                  <p class="promo-desc">${p.longDescription || p.shortDescription || 'Sin descripción detallada.'}</p>
+                  
+                  <!-- Badges de Información Clave -->
+                  <div class="promo-meta-chips">
+                    <div class="meta-chip chip-price">
+                      <span>💰 $${Number(p.price).toFixed(2)} ${p.unit || '/ porción'}</span>
+                    </div>
+                    <div class="meta-chip chip-date">
+                      <span>📅 Reparto: ${p.deliveryDate || p.batchDates || 'Por definir'}</span>
+                    </div>
+                    <div class="meta-chip chip-slots ${isSoldOut ? 'chip-slots-soldout' : ''}">
+                      <span>${isSoldOut ? `🚫 ${p.totalSlots}/${p.totalSlots} Agotada (0 libres)` : `🔥 ${effectiveReserved}/${p.totalSlots} reservados (${remaining} libres)`}</span>
+                    </div>
+                  </div>
+
+                  <!-- Barra de progreso de cupos -->
+                  <div class="promo-slots-progress-wrap">
+                    <div class="promo-slots-progress" title="${progressPercent}% de cupos reservados">
+                      <div class="promo-slots-fill" style="width: ${progressPercent}%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="promo-card-actions">
+                  <button type="button" class="btn-edit-tanda" data-id="${p.id}" title="Modificar datos, precio, cupos o foto de esta tanda">
+                    <span>✏️ Editar Tanda</span>
+                  </button>
+                  <button type="button" class="btn-toggle-promo ${p.isActive ? 'btn-status-pause' : 'btn-status-active'}" data-id="${p.id}">
+                    ${p.isActive ? '⏸️ Pausar Tanda' : '▶️ Activar en Catálogo'}
+                  </button>
+                  <button type="button" class="btn-delete-promo" data-id="${p.id}" title="Eliminar tanda permanentemente">
+                    🗑️ Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           `;
         })
         .join('');
 
+      promosContainer.querySelectorAll('.btn-edit-tanda').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = (e.currentTarget as HTMLElement).dataset.id!;
+          openEditTanda(id);
+        });
+      });
+
+      promosContainer.querySelectorAll('.admin-promo-card').forEach((card) => {
+        card.addEventListener('click', (e) => {
+          if ((e.target as HTMLElement).closest('button')) return;
+          const id = (card as HTMLElement).dataset.id!;
+          openEditTanda(id);
+        });
+      });
+
       promosContainer.querySelectorAll('.btn-toggle-promo').forEach((btn) => {
         btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           const id = (e.currentTarget as HTMLElement).dataset.id!;
           await togglePromotionStatus(id);
           renderPromotions();
@@ -452,9 +1031,23 @@ import BottomNav from '../components/BottomNav.astro';
 
       promosContainer.querySelectorAll('.btn-delete-promo').forEach((btn) => {
         btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           const id = (e.currentTarget as HTMLElement).dataset.id!;
-          if (confirm('¿Deseas eliminar esta tanda de la base de datos?')) {
+          const tanda = allLoadedPromos.find((p) => p.id === id);
+          const tandaName = tanda ? `"${tanda.name}"` : 'esta tanda';
+
+          const confirmed = await showConfirmDialog({
+            title: '¿Eliminar tanda del catálogo?',
+            message: `¿Deseas eliminar permanentemente la tanda <strong>${tandaName}</strong> de la base de datos? Esta acción no se puede deshacer.`,
+            confirmText: 'Sí, Eliminar',
+            cancelText: 'Cancelar',
+            isDanger: true,
+            icon: '🗑️'
+          });
+
+          if (confirmed) {
             await deletePromotion(id);
+            if (selectedTandaId === id) closeEditTanda();
             renderPromotions();
           }
         });
@@ -518,6 +1111,100 @@ import BottomNav from '../components/BottomNav.astro';
     clearPhoto();
   });
 
+  // Preset buttons
+  document.querySelectorAll('.btn-admin-preset').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const src = (btn as HTMLElement).dataset.img;
+      if (src) setPhoto(src);
+    });
+  });
+
+  // Quick CTA to create tanda tab
+  document.getElementById('btn-admin-create-cta')?.addEventListener('click', () => {
+    switchTab('create-promo');
+  });
+
+  // Calendar Delivery Date Handlers (Full Block Trigger)
+  const datePicker = document.getElementById('promo-date-picker') as HTMLInputElement;
+  const dateBlock = document.getElementById('delivery-date-block');
+  const calendarTitle = document.getElementById('calendar-block-title');
+  const calendarSubtitle = document.getElementById('calendar-block-subtitle');
+  const promoDatesInput = document.getElementById('promo-dates') as HTMLInputElement;
+
+  // Set min date to today so the chef cannot accidentally pick past dates
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (datePicker) datePicker.min = todayStr;
+
+  function formatSpanishDay(dateStr: string): { weekday: string; day: number; month: string; monthNumber: string; year: number } | null {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    const date = new Date(y, m - 1, d);
+    const weekdayRaw = date.toLocaleDateString('es-PA', { weekday: 'long' });
+    const monthRaw = date.toLocaleDateString('es-PA', { month: 'long' });
+    const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
+    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+    const monthNumber = String(m).padStart(2, '0');
+    return { weekday, day: d, month, monthNumber, year: y };
+  }
+
+  function handleDateSelected() {
+    const val = datePicker?.value;
+    if (!val) {
+      if (calendarTitle) calendarTitle.textContent = 'Toca aquí para seleccionar día';
+      if (calendarSubtitle) calendarSubtitle.textContent = 'Haz clic en cualquier parte del bloque para abrir el calendario';
+      dateBlock?.classList.remove('has-selected-date');
+      if (promoDatesInput) promoDatesInput.value = '';
+      return;
+    }
+
+    const info = formatSpanishDay(val);
+    if (!info) return;
+
+    const formatted = `${info.weekday} ${info.day} de ${info.month}`;
+    if (calendarTitle) calendarTitle.textContent = formatted;
+    if (calendarSubtitle) calendarSubtitle.textContent = `Reparto programado para el ${info.day}/${info.monthNumber}/${info.year} • Toca para cambiar`;
+    dateBlock?.classList.add('has-selected-date');
+    if (promoDatesInput) promoDatesInput.value = formatted;
+  }
+
+  function triggerCalendarPicker() {
+    if (!datePicker) return;
+    try {
+      if (typeof datePicker.showPicker === 'function') {
+        datePicker.showPicker();
+      } else {
+        datePicker.focus();
+        datePicker.click();
+      }
+    } catch (err) {
+      datePicker.focus();
+    }
+  }
+
+  // Any click on the input triggers showPicker and prevents double propagation
+  datePicker?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerCalendarPicker();
+  });
+
+  // Clicking anywhere on the block opens the calendar
+  dateBlock?.addEventListener('click', () => {
+    triggerCalendarPicker();
+  });
+
+  // Keyboard accessibility: Enter or Space opens the calendar
+  dateBlock?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      triggerCalendarPicker();
+    }
+  });
+
+  datePicker?.addEventListener('change', () => {
+    handleDateSelected();
+  });
+
   // Create Promo Form Submit
   createPromoForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -532,8 +1219,14 @@ import BottomNav from '../components/BottomNav.astro';
     const image = (document.getElementById('promo-image-data') as HTMLInputElement).value ||
                   (document.getElementById('promo-image-url') as HTMLInputElement).value;
 
+    if (!batchDates) {
+      await showAlertDialog('Por favor selecciona el día de reparto haciendo clic en el bloque del calendario interactivo.', 'Falta Día de Reparto', '📅');
+      triggerCalendarPicker();
+      return;
+    }
+
     if (!image) {
-      alert('Por favor agrega una foto para la tanda (puedes seleccionarla desde tu dispositivo o ingresar un enlace)');
+      await showAlertDialog('Por favor agrega una foto para la tanda (puedes seleccionarla desde tu dispositivo o ingresar un enlace directo).', 'Falta Foto de la Tanda', '📷');
       return;
     }
 
@@ -557,13 +1250,171 @@ import BottomNav from '../components/BottomNav.astro';
           promoFeedback.style.display = 'none';
           createPromoForm.reset();
           clearPhoto();
+          if (datePicker) datePicker.value = '';
+          if (promoDatesInput) promoDatesInput.value = '';
+          if (calendarTitle) calendarTitle.textContent = 'Toca aquí para seleccionar día';
+          if (calendarSubtitle) calendarSubtitle.textContent = 'Haz clic en cualquier parte del bloque para abrir el calendario';
+          dateBlock?.classList.remove('has-selected-date');
           // Switch to manage tab
-          const manageTab = document.querySelector('[data-tab="manage-promos"]') as HTMLButtonElement;
-          manageTab?.click();
+          switchTab('manage-promos');
         }, 1200);
       }
     } catch (err: any) {
-      alert(err.message || 'Error al guardar la tanda');
+      await showAlertDialog(err.message || 'Error al guardar la tanda en la base de datos', 'Error al Guardar', '⚠️');
+    }
+  });
+
+  // Edit Photo Handlers
+  function setEditPhoto(dataUrl: string) {
+    if (editPhotoData) editPhotoData.value = dataUrl;
+    if (editPreviewImg) editPreviewImg.src = dataUrl;
+    if (editUploadPrompt) editUploadPrompt.style.display = 'none';
+    if (editPreviewWrap) editPreviewWrap.style.display = 'block';
+  }
+
+  editUploadZone?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('#btn-edit-change-photo')) return;
+    editPhotoFile?.click();
+  });
+
+  btnEditChangePhoto?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    editPhotoFile?.click();
+  });
+
+  editPhotoFile?.addEventListener('change', () => {
+    const file = editPhotoFile.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result) setEditPhoto(result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  editPhotoUrlInput?.addEventListener('input', () => {
+    const url = editPhotoUrlInput.value.trim();
+    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/'))) {
+      setEditPhoto(url);
+    }
+  });
+
+  document.querySelectorAll('.btn-edit-preset').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const img = (btn as HTMLElement).dataset.img;
+      if (img) setEditPhoto(img);
+    });
+  });
+
+  // Edit Calendar Handlers
+  function handleEditDateSelected() {
+    const val = editDatePicker?.value;
+    if (!val) return;
+    const info = formatSpanishDay(val);
+    if (!info) return;
+
+    const formatted = `${info.weekday} ${info.day} de ${info.month}`;
+    if (editCalendarTitle) editCalendarTitle.textContent = formatted;
+    if (editCalendarSubtitle) editCalendarSubtitle.textContent = `Reparto programado para el ${info.day}/${info.monthNumber}/${info.year} • Toca para cambiar`;
+    editDateBlock?.classList.add('has-selected-date');
+    if (editPromoDatesInput) editPromoDatesInput.value = formatted;
+  }
+
+  function triggerEditCalendarPicker() {
+    if (!editDatePicker) return;
+    try {
+      if (typeof editDatePicker.showPicker === 'function') {
+        editDatePicker.showPicker();
+      } else {
+        editDatePicker.focus();
+        editDatePicker.click();
+      }
+    } catch {
+      editDatePicker.focus();
+    }
+  }
+
+  editDatePicker?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerEditCalendarPicker();
+  });
+
+  editDateBlock?.addEventListener('click', () => {
+    triggerEditCalendarPicker();
+  });
+
+  editDateBlock?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      triggerEditCalendarPicker();
+    }
+  });
+
+  editDatePicker?.addEventListener('change', () => {
+    handleEditDateSelected();
+  });
+
+  // Edit Promo Form Submit
+  editPromoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = editPromoId.value;
+    if (!id) return;
+
+    const name = editPromoName.value.trim();
+    const subtitle = editPromoSubtitle.value.trim();
+    const price = parseFloat(editPromoPrice.value);
+    const unit = editPromoUnit.value;
+    const totalSlots = parseInt(editPromoSlots.value, 10);
+    const currentPromo = allLoadedPromos.find((p) => p.id === id);
+    const activeOrderSlots = getActiveReservedSlotsForProduct(id, name, currentPromo?.slug, allLoadedPromos.length);
+    const inputReserved = parseInt(editReservedSlots.value, 10);
+    const reservedSlots = isNaN(inputReserved) ? activeOrderSlots : Math.max(inputReserved, activeOrderSlots);
+    const batchDates = editPromoDatesInput.value.trim();
+    const longDescription = editPromoLongDesc.value.trim();
+    const image = editPhotoData.value || editPhotoUrlInput.value.trim();
+    const isActive = editPromoStatus.value === 'true';
+
+    if (!batchDates) {
+      await showAlertDialog('Por favor selecciona la fecha de entrega en el bloque del calendario interactivo.', 'Falta Fecha de Entrega', '📅');
+      triggerEditCalendarPicker();
+      return;
+    }
+
+    if (!image) {
+      await showAlertDialog('Por favor selecciona o ingresa una foto para la tanda.', 'Falta Foto de la Tanda', '📷');
+      return;
+    }
+
+    try {
+      await updatePromotion(id, {
+        name,
+        subtitle,
+        price,
+        unit,
+        totalSlots,
+        reservedSlots,
+        batchDates,
+        deliveryDate: batchDates,
+        shortDescription: longDescription.slice(0, 120),
+        longDescription,
+        image,
+        isActive
+      });
+
+      if (editPromoFeedback) {
+        editPromoFeedback.textContent = `¡Tanda "${name}" actualizada con éxito en la base de datos!`;
+        editPromoFeedback.style.display = 'block';
+        setTimeout(() => {
+          editPromoFeedback.style.display = 'none';
+          closeEditTanda();
+          renderPromotions();
+        }, 1200);
+      }
+    } catch (err: any) {
+      await showAlertDialog(err.message || 'Error al actualizar la tanda en la base de datos', 'Error al Actualizar', '⚠️');
     }
   });
 
@@ -600,7 +1451,7 @@ import BottomNav from '../components/BottomNav.astro';
   // Change Password Handle
   const changePassForm = document.getElementById('change-pass-form') as HTMLFormElement;
   const changePassFeedback = document.getElementById('change-pass-feedback') as HTMLElement;
-  changePassForm?.addEventListener('submit', (e) => {
+  changePassForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newPassInput = document.getElementById('new-admin-pass') as HTMLInputElement;
     const newPass = newPassInput?.value || '';
@@ -616,15 +1467,13 @@ import BottomNav from '../components/BottomNav.astro';
         }, 2500);
       }
     } catch (err: any) {
-      alert(err.message || 'Error al actualizar la contraseña');
+      await showAlertDialog(err.message || 'Error al actualizar la contraseña', 'Error de Contraseña', '🔐');
     }
   });
 
   logoutBtn?.addEventListener('click', () => {
     logoutUser();
-    const passInput = document.getElementById('admin-pass') as HTMLInputElement;
-    if (passInput) passInput.value = '';
-    initAdmin();
+    window.location.href = '/';
   });
 
   // Start
@@ -633,57 +1482,58 @@ import BottomNav from '../components/BottomNav.astro';
 
 <style>
   .admin-page {
-    padding-top: 2rem;
-    padding-bottom: 4rem;
+    padding-top: 2.75rem;
+    padding-bottom: 5.5rem;
   }
 
   /* Admin Login View */
   .admin-auth-card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-xl);
-    padding: 3rem 2rem;
+    padding: 3.25rem 2.5rem;
     text-align: center;
-    max-width: 460px;
-    margin: 2rem auto;
+    max-width: 480px;
+    margin: 2.5rem auto;
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-hover);
   }
 
   .lock-icon {
     font-size: 3rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
   }
 
   .admin-auth-title {
-    font-size: 1.6rem;
+    font-size: 1.65rem;
     font-weight: 800;
     color: var(--color-on-surface);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
   }
 
   .admin-auth-desc {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     color: var(--color-on-surface-variant);
-    margin-bottom: 1.5rem;
-    line-height: 1.45;
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
   }
 
   .admin-form {
     display: flex;
     flex-direction: column;
-    gap: 1.15rem;
+    gap: 1.35rem;
     text-align: left;
   }
 
   .admin-input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.15rem;
     border: 1.5px solid var(--color-outline-variant);
     border-radius: var(--radius-md);
     background-color: #fffdf9;
     font-family: inherit;
     font-size: 0.95rem;
     color: var(--color-on-surface);
+    line-height: 1.45;
   }
 
   .admin-input:focus {
@@ -726,7 +1576,7 @@ import BottomNav from '../components/BottomNav.astro';
     border: 2px dashed var(--color-outline-variant);
     border-radius: var(--radius-lg);
     background-color: var(--color-surface-container-low);
-    padding: 1.5rem;
+    padding: 2.25rem 1.5rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -747,7 +1597,7 @@ import BottomNav from '../components/BottomNav.astro';
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.5rem;
   }
 
   .upload-icon {
@@ -800,33 +1650,33 @@ import BottomNav from '../components/BottomNav.astro';
   }
 
   .url-fallback-row {
-    margin-top: 0.5rem;
+    margin-top: 0.85rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
   }
 
   .url-fallback-row small {
-    font-size: 0.75rem;
+    font-size: 0.775rem;
     color: var(--color-on-surface-muted);
   }
 
   .input-sm {
-    padding: 0.5rem 0.85rem;
-    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
   }
 
   .admin-error {
     background-color: var(--color-error-container);
     color: var(--color-on-error-container);
-    padding: 0.5rem 0.85rem;
+    padding: 0.65rem 1rem;
     border-radius: var(--radius-md);
     font-size: 0.825rem;
     font-weight: 700;
   }
 
   .btn-admin-submit {
-    padding: 0.9rem;
+    padding: 0.95rem;
     border-radius: var(--radius-full);
     background-color: var(--color-primary);
     color: #ffffff;
@@ -843,18 +1693,18 @@ import BottomNav from '../components/BottomNav.astro';
   .admin-dashboard {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
   }
 
   .admin-header-bar {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-xl);
-    padding: 1.75rem 2rem;
+    padding: 2rem 2.5rem;
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   @media (min-width: 640px) {
@@ -909,11 +1759,176 @@ import BottomNav from '../components/BottomNav.astro';
     font-weight: 700;
   }
 
+  .btn-admin-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, #8d4b00 0%, #733c00 100%);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    box-shadow: 0 3px 10px rgba(141, 75, 0, 0.25);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-admin-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(141, 75, 0, 0.35);
+  }
+
+  .photo-presets-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .photo-presets-row small {
+    color: var(--color-on-surface-muted);
+    font-size: 0.775rem;
+  }
+
+  .btn-admin-preset {
+    font-size: 0.775rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: rgba(141, 75, 0, 0.08);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(141, 75, 0, 0.18);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-admin-preset:hover {
+    background-color: rgba(141, 75, 0, 0.16);
+  }
+
+  /* Calendar Full Block Trigger */
+  .calendar-block-trigger {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-outline-variant);
+    background-color: var(--color-surface);
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  .calendar-block-trigger:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-container-low);
+    box-shadow: 0 4px 14px rgba(141, 75, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .calendar-block-trigger:focus-within,
+  .calendar-block-trigger:focus-visible {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(141, 75, 0, 0.18);
+  }
+
+  .calendar-native-input-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+  }
+
+  .calendar-block-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    pointer-events: none; /* Allows clicks to reach the overlay input */
+  }
+
+  .calendar-block-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(141, 75, 0, 0.08);
+    color: var(--color-primary);
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+  }
+
+  .calendar-block-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 0.25rem;
+  }
+
+  .calendar-block-title {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--color-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
+  }
+
+  .calendar-block-subtitle {
+    font-size: 0.76rem;
+    color: var(--color-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
+  }
+
+  /* Active / Selected state */
+  .calendar-block-trigger.has-selected-date {
+    border-color: var(--color-primary);
+    background-color: rgba(141, 75, 0, 0.04);
+  }
+
+  .calendar-block-trigger.has-selected-date .calendar-block-icon {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  .calendar-block-trigger.has-selected-date .calendar-block-title {
+    color: var(--color-primary);
+    font-weight: 800;
+    font-size: 1.05rem;
+  }
+
+  .field-help-text {
+    font-size: 0.76rem;
+    color: var(--color-on-surface-muted);
+    line-height: 1.45;
+    margin-top: 0.45rem;
+    display: block;
+  }
+
   /* Metrics */
   .metrics-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
   @media (min-width: 640px) {
@@ -925,46 +1940,49 @@ import BottomNav from '../components/BottomNav.astro';
   .metric-card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
+    padding: 1.6rem 1.85rem;
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-card);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   .metric-icon {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
   }
 
   .metric-value {
     display: block;
-    font-size: 1.75rem;
+    font-size: 1.85rem;
     font-weight: 800;
     color: var(--color-primary);
     line-height: 1.1;
   }
 
   .metric-label {
-    font-size: 0.8rem;
+    font-size: 0.825rem;
     font-weight: 600;
     color: var(--color-on-surface-muted);
+    margin-top: 0.2rem;
   }
 
   /* Navigation Tabs */
   .admin-nav-tabs {
     display: flex;
     background-color: var(--color-surface-container);
-    padding: 0.35rem;
+    padding: 0.45rem;
     border-radius: var(--radius-full);
-    gap: 0.35rem;
+    gap: 0.5rem;
     overflow-x: auto;
+    margin-top: 0.25rem;
+    margin-bottom: 0.75rem;
   }
 
   .admin-nav-tabs .tab-btn {
-    padding: 0.65rem 1.25rem;
+    padding: 0.75rem 1.45rem;
     border-radius: var(--radius-full);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 800;
     color: var(--color-on-surface-variant);
     white-space: nowrap;
@@ -978,11 +1996,15 @@ import BottomNav from '../components/BottomNav.astro';
   }
 
   /* Content */
+  .tab-content {
+    padding-top: 0.5rem;
+  }
+
   .content-header {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
 
   @media (min-width: 640px) {
@@ -1022,7 +2044,7 @@ import BottomNav from '../components/BottomNav.astro';
   .admin-orders-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
   @media (min-width: 768px) {
@@ -1034,12 +2056,12 @@ import BottomNav from '../components/BottomNav.astro';
   .admin-order-card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
+    padding: 1.65rem 1.85rem;
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   .admin-order-card.border-pending {
@@ -1099,22 +2121,23 @@ import BottomNav from '../components/BottomNav.astro';
   }
 
   .order-customer-details {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     color: var(--color-on-surface-variant);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.45rem;
     background-color: var(--color-surface-container-low);
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     border-radius: var(--radius-md);
   }
 
   .order-actions-bar {
     display: flex;
-    gap: 0.65rem;
+    gap: 0.85rem;
     align-items: center;
     flex-wrap: wrap;
     margin-top: auto;
+    padding-top: 0.5rem;
   }
 
   .btn-wa-chat {
@@ -1162,27 +2185,40 @@ import BottomNav from '../components/BottomNav.astro';
   .form-container-card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-xl);
-    padding: 2rem;
+    padding: 2.75rem 2.5rem;
     border: 1px solid var(--color-border-subtle);
-    max-width: 760px;
+    max-width: 780px;
     margin: 0 auto;
     box-shadow: var(--shadow-card);
   }
 
+  @media (max-width: 640px) {
+    .form-container-card {
+      padding: 1.75rem 1.25rem;
+    }
+  }
+
   .form-intro {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.25rem;
+  }
+
+  .form-intro p {
+    margin-top: 0.4rem;
+    font-size: 0.92rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.5;
   }
 
   .create-promo-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 2rem;
   }
 
   .form-grid-2 {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.75rem 1.5rem;
   }
 
   @media (min-width: 640px) {
@@ -1194,7 +2230,7 @@ import BottomNav from '../components/BottomNav.astro';
   .form-grid-3 {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.75rem 1.25rem;
   }
 
   @media (min-width: 640px) {
@@ -1203,30 +2239,45 @@ import BottomNav from '../components/BottomNav.astro';
     }
   }
 
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .form-group label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-on-surface);
+    letter-spacing: 0.01em;
+  }
+
   .btn-publish-promo {
-    padding: 1rem 1.5rem;
+    padding: 1.15rem 2rem;
     border-radius: var(--radius-full);
     background-color: var(--color-primary);
     color: #ffffff;
-    font-size: 1rem;
+    font-size: 1.02rem;
     font-weight: 800;
     box-shadow: 0 4px 14px rgba(141, 75, 0, 0.25);
     transition: all 0.2s ease;
-    margin-top: 0.5rem;
+    margin-top: 1.25rem;
+    letter-spacing: 0.01em;
   }
 
   .btn-publish-promo:hover {
     background-color: var(--color-primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(141, 75, 0, 0.32);
   }
 
   .admin-success-msg {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.25rem;
     background-color: #d1fae5;
     color: #065f46;
     border-radius: var(--radius-md);
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     text-align: center;
   }
 
@@ -1234,92 +2285,111 @@ import BottomNav from '../components/BottomNav.astro';
   .admin-promos-container {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.35rem;
   }
 
-  .admin-promo-card {
+  /* Edit Tanda Panel */
+  .edit-tanda-panel {
     background-color: var(--color-surface-card);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--color-border-subtle);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    box-shadow: 0 10px 30px rgba(141, 75, 0, 0.12);
+    margin-bottom: 2.25rem;
+    animation: fadeIn 0.3s ease;
   }
 
-  @media (min-width: 640px) {
-    .admin-promo-card {
-      flex-direction: row;
-      align-items: center;
+  @media (min-width: 768px) {
+    .edit-tanda-panel {
+      padding: 2.25rem 2.5rem;
     }
   }
 
-  .promo-thumb {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    flex-shrink: 0;
+  .edit-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
 
-  .promo-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .edit-panel-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
   }
 
-  .promo-info {
-    flex: 1;
+  .edit-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-primary);
+    background-color: rgba(141, 75, 0, 0.1);
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+    width: fit-content;
   }
 
-  .promo-name {
-    font-size: 1.15rem;
+  .edit-panel-title {
+    font-size: 1.35rem;
     font-weight: 800;
     color: var(--color-on-surface);
   }
 
-  .promo-sub {
-    font-size: 0.85rem;
-    color: var(--color-secondary);
-    margin-bottom: 0.25rem;
-  }
-
-  .promo-meta {
-    font-size: 0.825rem;
-    color: var(--color-on-surface-variant);
-  }
-
-  .promo-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .btn-toggle-promo {
+  .btn-cancel-edit {
     padding: 0.45rem 0.95rem;
     border-radius: var(--radius-full);
-    font-size: 0.8rem;
-    font-weight: 800;
-  }
-
-  .btn-active {
-    background-color: #d1fae5;
-    color: #065f46;
-  }
-
-  .btn-paused {
+    border: 1px solid var(--color-outline-variant);
     background-color: var(--color-surface-container);
-    color: var(--color-on-surface-muted);
+    color: var(--color-on-surface-variant);
+    font-size: 0.825rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    cursor: pointer;
   }
 
-  .btn-delete-promo {
-    padding: 0.45rem 0.95rem;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--color-error);
-    background: transparent;
-    color: var(--color-error);
-    font-size: 0.8rem;
-    font-weight: 700;
+  .btn-cancel-edit:hover {
+    background-color: var(--color-surface-container-high);
+    border-color: var(--color-primary);
   }
+
+  .edit-actions-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-save-changes {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .btn-cancel-secondary {
+    padding: 1.15rem 1.75rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-outline-variant);
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface-variant);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1.25rem;
+  }
+
+  .btn-cancel-secondary:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
+
+  /* Tandas cards & Modal styles are loaded globally in global.css */
 
   .empty-admin-box {
     background-color: var(--color-surface-card);

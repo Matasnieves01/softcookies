@@ -6,7 +6,6 @@ import HeroGreeting from '../components/HeroGreeting.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import BatchCard from '../components/BatchCard.astro';
 import Footer from '../components/Footer.astro';
-import BottomNav from '../components/BottomNav.astro';
 import { getTandasFromDb, getCloudflareDb } from '../services/tandas';
 
 export const prerender = false;
@@ -26,6 +25,7 @@ const serverTandas = await getTandasFromDb(db, true);
   <Navbar 
     brandName="Soft Cookies" 
     instagramHandle="@softcookies.pty" 
+    activeTab="inicio"
   />
 
   <main id="main-content">
@@ -37,11 +37,11 @@ const serverTandas = await getTandasFromDb(db, true);
 
     <!-- Section Title -->
     <SectionHeader 
-      title="Tandas Abiertas para Reserva" 
+      title={serverTandas.length > 0 ? "Tandas Abiertas para Reserva" : "Tandas Disponibles"} 
     />
 
     <!-- Dynamic Tandas Section -->
-    <section class="batch-section" aria-label="Tandas disponibles">
+    <section class="batch-section" id="tandas" aria-label="Tandas disponibles">
       <div class="container" id="tandas-container">
         <!-- Rendered SSR or Hydrated dynamically -->
         <div id="tandas-ssr-list" class="tandas-grid" style={serverTandas.length > 0 ? '' : 'display: none;'}>
@@ -62,12 +62,30 @@ const serverTandas = await getTandasFromDb(db, true);
           ))}
         </div>
 
+        <!-- Empty State when 0 tandas in DB -->
         <div id="tandas-empty-state" class="empty-tandas-card" style={serverTandas.length === 0 ? '' : 'display: none;'}>
-          <div class="empty-icon">👩‍🍳</div>
-          <h3 class="empty-title">Próxima tanda en preparación</h3>
+          <div class="empty-badge-pill">
+            <span class="empty-badge-dot"></span>
+            <span>Sin tandas activas</span>
+          </div>
+
+          <div class="empty-icon-circle">
+            <span class="empty-emoji">👩‍🍳</span>
+          </div>
+
+          <h3 class="empty-title">No hay tandas disponibles</h3>
+
           <p class="empty-desc">
-            La chef Chelsea está preparando los nuevos horneados artesanales. Escríbenos por WhatsApp o síguenos en Instagram para no perderte el próximo cupo.
+            Actualmente no hay tandas de horneado abiertas para reserva en la base de datos. La chef Chelsea anunciará muy pronto la fecha y producto de la próxima tanda artesanal con cupos limitados.
           </p>
+
+          <div class="empty-tip-card">
+            <div class="tip-icon">🔔</div>
+            <div class="tip-text">
+              <strong>¡Las tandas vuelan rápido!</strong> Las reservas son de cupos limitados y se cierran al completarse. Escríbenos directamente o síguenos en redes para ser el primero en apartar tu porción cuando se abra la próxima tanda.
+            </div>
+          </div>
+
           <div class="empty-actions">
             <a 
               href="https://wa.me/50760000000?text=Hola%20Chef%20Chelsea!%20%F0%9F%91%8B%20Quisiera%20saber%20cu%C3%A1ndo%20abrir%C3%A1n%20la%20pr%C3%B3xima%20tanda%20en%20Soft%20Cookies" 
@@ -75,7 +93,10 @@ const serverTandas = await getTandasFromDb(db, true);
               rel="noopener noreferrer" 
               class="btn-wa-pill"
             >
-              <span>💬 Consultar Próxima Tanda por WhatsApp</span>
+              <svg viewBox="0 0 24 24" class="btn-icon" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+              </svg>
+              <span>Consultar próxima tanda por WhatsApp</span>
             </a>
             <a 
               href="https://instagram.com/softcookies.pty" 
@@ -83,7 +104,22 @@ const serverTandas = await getTandasFromDb(db, true);
               rel="noopener noreferrer" 
               class="btn-ig-pill"
             >
-              <span>📸 Seguir en Instagram @softcookies.pty</span>
+              <svg viewBox="0 0 24 24" class="btn-icon" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+              <span>Seguir en Instagram @softcookies.pty</span>
+            </a>
+          </div>
+
+          <!-- Chef hint if logged in as admin -->
+          <div id="chef-empty-hint" class="chef-empty-hint" style="display: none;">
+            <div class="chef-hint-badge">👩‍🍳 Vista de Administrador</div>
+            <p class="chef-hint-text">No hay tandas activas en la base de datos. Puedes abrir y programar una tanda artesanal desde el panel de administración.</p>
+            <a href="/admin" class="btn-chef-admin-action">
+              <span>Ir al Panel de Administración</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
             </a>
           </div>
         </div>
@@ -93,94 +129,166 @@ const serverTandas = await getTandasFromDb(db, true);
 
   <!-- Site Footer -->
   <Footer />
-
-  <!-- Mobile Bottom Floating Bar -->
-  <BottomNav activeTab="inicio" />
 </Layout>
 
 <script>
   import { fetchTandasClient } from '../services/tandas';
+  import { isAdminUser } from '../services/auth';
+  import { getActiveReservedSlotsForProduct, syncTandaReservedSlots, syncAllTandasReservedSlots } from '../services/orders';
 
   const ssrList = document.getElementById('tandas-ssr-list');
   const emptyState = document.getElementById('tandas-empty-state');
+  const sectionTitle = document.getElementById('section-title-text');
+  const chefHint = document.getElementById('chef-empty-hint');
+
+  let currentLoadedSignature: string | null = null;
 
   async function checkAndHydrateTandas() {
     try {
       const tandas = await fetchTandasClient(false);
-      // If server rendered 0, or client has fresh tandas
-      if (tandas.length > 0) {
+      const hasTandas = Array.isArray(tandas) && tandas.length > 0;
+      const totalTandas = hasTandas ? tandas.length : 0;
+
+      // Compute dynamic reserved slots for each tanda taking active orders into account
+      const tandasWithEffectiveSlots = hasTandas ? tandas.map((tanda) => {
+        const activeOrderSlots = getActiveReservedSlotsForProduct(tanda.id, tanda.name, tanda.slug, totalTandas);
+        const effectiveReserved = Math.max(tanda.reservedSlots || 0, activeOrderSlots);
+        
+        // Background sync to server if local orders exceeded stored DB reserved slots
+        if (activeOrderSlots > (tanda.reservedSlots || 0)) {
+          syncTandaReservedSlots(tanda.id, tanda.name, tanda.slug);
+        }
+
+        return {
+          ...tanda,
+          effectiveReserved,
+          remaining: Math.max(0, tanda.totalSlots - effectiveReserved),
+          pct: Math.min(100, Math.round((effectiveReserved / tanda.totalSlots) * 100))
+        };
+      }) : [];
+
+      const signature = hasTandas 
+        ? tandasWithEffectiveSlots.map(t => `${t.id}-${t.effectiveReserved}-${t.isActive}-${t.price}`).join('|') 
+        : 'empty';
+
+      // Update Section Title
+      if (sectionTitle) {
+        sectionTitle.textContent = hasTandas ? 'Tandas Abiertas para Reserva' : 'Tandas Disponibles';
+      }
+
+      // Update Admin Hint
+      if (chefHint) {
+        chefHint.style.display = (!hasTandas && isAdminUser()) ? 'block' : 'none';
+      }
+
+      if (hasTandas) {
         if (ssrList) {
-          ssrList.innerHTML = tandas.map((tanda) => {
-            const remaining = tanda.totalSlots - tanda.reservedSlots;
-            const pct = Math.round((tanda.reservedSlots / tanda.totalSlots) * 100);
-            return `
-              <article class="batch-card" aria-label="Tanda de ${tanda.name}">
-                <div class="card-grid">
-                  <div class="visual-col">
-                    <div class="image-wrapper">
-                      <img src="${tanda.image}" alt="${tanda.name}" class="product-image" loading="lazy" />
+          // Re-render if signature changed or SSR container was empty
+          if (currentLoadedSignature !== signature || ssrList.children.length === 0) {
+            currentLoadedSignature = signature;
+            ssrList.innerHTML = tandasWithEffectiveSlots.map((tanda) => {
+              const isSoldOut = tanda.remaining <= 0;
+              return `
+                <article class="batch-card ${isSoldOut ? 'card-sold-out' : ''}" aria-label="Tanda de ${tanda.name}">
+                  <div class="card-grid">
+                    <div class="visual-col">
+                      <div class="image-wrapper">
+                        <img src="${tanda.image || '/images/tarta-vasca.jpg'}" alt="${tanda.name}" class="product-image" loading="lazy" />
+                        ${isSoldOut ? '<span class="badge-sold-out-overlay">🚫 Cupos Agotados</span>' : ''}
+                      </div>
+                    </div>
+                    <div class="details-col">
+                      <div class="price-header">
+                        <div class="price-tag">
+                          <span class="price-val">$${Number(tanda.price).toFixed(2)}</span>
+                          <span class="price-unit">${tanda.unit || '/ porción'}</span>
+                        </div>
+                      </div>
+                      <div class="title-section">
+                        <h3 class="product-title">${tanda.name}</h3>
+                        ${tanda.subtitle ? `<p class="product-subtitle">${tanda.subtitle}</p>` : ''}
+                        <p class="product-description">${tanda.longDescription || tanda.shortDescription || ''}</p>
+                      </div>
+                      <div class="date-chip">
+                        <svg viewBox="0 0 24 24" class="chip-calendar-icon" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>📅 Reparto: ${tanda.deliveryDate || tanda.batchDates || 'Por definir'}</span>
+                      </div>
+                      <div class="scarcity-box ${isSoldOut ? 'is-sold-out' : ''}">
+                        <div class="scarcity-labels">
+                          ${isSoldOut ? `
+                            <span class="remaining-text sold-out-text">
+                              🚫 Cupos agotados
+                            </span>
+                            <span class="reserved-text">${tanda.totalSlots} de ${tanda.totalSlots} reservados (100%)</span>
+                          ` : `
+                            <span class="remaining-text">
+                              <span class="fire-emoji">🔥</span> Solo quedan ${tanda.remaining} cupos
+                            </span>
+                            <span class="reserved-text">${tanda.effectiveReserved} de ${tanda.totalSlots} reservados</span>
+                          `}
+                        </div>
+                        <div class="progress-track" role="progressbar" aria-valuenow="${isSoldOut ? tanda.totalSlots : tanda.effectiveReserved}" aria-valuemin="0" aria-valuemax="${tanda.totalSlots}">
+                          <div class="progress-bar ${isSoldOut ? 'bar-sold-out' : ''}" style="width: ${isSoldOut ? 100 : tanda.pct}%"></div>
+                        </div>
+                      </div>
+                      ${isSoldOut ? `
+                        <a href="/producto/${tanda.slug}" class="cta-button btn-sold-out">
+                          <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                          </svg>
+                          <span>Tanda completa • Ver detalles</span>
+                        </a>
+                      ` : `
+                        <a href="/producto/${tanda.slug}" class="cta-button">
+                          <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          <span>Ver detalles y reservar</span>
+                        </a>
+                      `}
                     </div>
                   </div>
-                  <div class="details-col">
-                    <div class="price-header">
-                      <div class="price-tag">
-                        <span class="price-val">$${Number(tanda.price).toFixed(2)}</span>
-                        <span class="price-unit">${tanda.unit || '/ porción'}</span>
-                      </div>
-                    </div>
-                    <div class="title-section">
-                      <h3 class="product-title">${tanda.name}</h3>
-                      ${tanda.subtitle ? `<p class="product-subtitle">${tanda.subtitle}</p>` : ''}
-                      <p class="product-description">${tanda.longDescription || tanda.shortDescription}</p>
-                    </div>
-                    <div class="date-chip">
-                      <svg viewBox="0 0 24 24" class="chip-calendar-icon" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                      <span>📅 Reparto: ${tanda.deliveryDate || tanda.batchDates}</span>
-                    </div>
-                    <div class="scarcity-box">
-                      <div class="scarcity-labels">
-                        <span class="remaining-text">
-                          <span class="fire-emoji">🔥</span> Quedan ${remaining} cupos
-                        </span>
-                        <span class="reserved-text">${tanda.reservedSlots} de ${tanda.totalSlots} reservados</span>
-                      </div>
-                      <div class="progress-track">
-                        <div class="progress-bar" style="width: ${pct}%"></div>
-                      </div>
-                    </div>
-                    <a href="/producto/${tanda.slug}" class="cta-button">
-                      <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                      <span>Ver detalles y reservar</span>
-                    </a>
-                  </div>
-                </div>
-              </article>
-            `;
-          }).join('');
-          ssrList.style.display = 'grid';
+                </article>
+              `;
+            }).join('');
+          }
+          ssrList.style.display = 'flex';
         }
         if (emptyState) emptyState.style.display = 'none';
       } else {
-        // No tandas
-        if (ssrList) ssrList.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'block';
+        // No tandas in DB
+        currentLoadedSignature = 'empty';
+        if (ssrList) {
+          ssrList.innerHTML = '';
+          ssrList.style.display = 'none';
+        }
+        if (emptyState) emptyState.style.display = 'flex';
       }
     } catch (err) {
       console.warn('Hydration error:', err);
     }
   }
 
-  // Listen for admin changes
+  // Reactive listeners for same tab and cross-tab changes
   window.addEventListener('softcookies:promotions-updated', checkAndHydrateTandas);
-  // Also check on mount if client has freshly published tandas
+  window.addEventListener('softcookies:orders-updated', checkAndHydrateTandas);
+  window.addEventListener('softcookies:order-created', checkAndHydrateTandas);
+  window.addEventListener('softcookies:auth-changed', checkAndHydrateTandas);
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'softcookies_promotions' || e.key === 'softcookies_orders' || e.key === 'softcookies_current_user') {
+      checkAndHydrateTandas();
+    }
+  });
+
+  // Run on mount
   checkAndHydrateTandas();
+  syncAllTandasReservedSlots();
 </script>
 
 <style>
@@ -189,99 +297,227 @@ const serverTandas = await getTandasFromDb(db, true);
   }
 
   .batch-section {
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
   }
 
   .tandas-grid {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.75rem;
   }
 
-  /* Empty state */
+  /* Empty state card */
   .empty-tandas-card {
     background-color: var(--color-surface-card);
     border-radius: var(--radius-xl);
-    padding: 3.5rem 1.75rem;
+    padding: 3rem 1.75rem;
     text-align: center;
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-card);
-    max-width: 600px;
-    margin: 1.5rem auto 2.5rem;
+    max-width: 620px;
+    margin: 1.25rem auto 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  .empty-icon {
-    font-size: 3.2rem;
-    margin-bottom: 1rem;
+  @media (min-width: 640px) {
+    .empty-tandas-card {
+      padding: 3.5rem 2.5rem;
+    }
+  }
+
+  .empty-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--color-surface-container-high);
+    color: var(--color-secondary-dark);
+    font-size: 0.8125rem;
+    font-weight: 800;
+    padding: 0.35rem 0.95rem;
+    border-radius: var(--radius-full);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--color-outline-variant);
+  }
+
+  .empty-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #d93838;
+    box-shadow: 0 0 0 2px rgba(217, 56, 56, 0.2);
+  }
+
+  .empty-icon-circle {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-surface-container-low), var(--color-surface-container-high));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 4px 12px rgba(74, 40, 16, 0.06);
+  }
+
+  .empty-emoji {
+    font-size: 2.5rem;
+    line-height: 1;
   }
 
   .empty-title {
-    font-size: 1.5rem;
+    font-size: 1.65rem;
     font-weight: 800;
     color: var(--color-on-surface);
-    margin-bottom: 0.65rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .empty-title {
+      font-size: 1.9rem;
+    }
   }
 
   .empty-desc {
     font-size: 0.95rem;
     color: var(--color-on-surface-variant);
     line-height: 1.6;
+    max-width: 480px;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-tip-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background-color: #fff9f3;
+    border: 1px solid rgba(141, 75, 0, 0.15);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.15rem;
+    text-align: left;
     margin-bottom: 2rem;
+    max-width: 500px;
+  }
+
+  .tip-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .tip-text {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-secondary-dark);
   }
 
   .empty-actions {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
-    align-items: center;
-    justify-content: center;
-  }
-
-  @media (min-width: 520px) {
-    .empty-actions {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
+    width: 100%;
+    max-width: 440px;
   }
 
   .btn-wa-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.45rem;
+    gap: 0.55rem;
     background-color: #25D366;
     color: #ffffff;
     font-weight: 800;
-    font-size: 0.875rem;
-    padding: 0.75rem 1.35rem;
+    font-size: 0.9rem;
+    padding: 0.85rem 1.5rem;
     border-radius: var(--radius-full);
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
     transition: all 0.2s ease;
+    text-decoration: none;
   }
 
   .btn-wa-pill:hover {
     background-color: #20b858;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 211, 102, 0.38);
+    color: #ffffff;
   }
 
   .btn-ig-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.45rem;
+    gap: 0.55rem;
     background-color: var(--color-surface-container);
     color: var(--color-secondary-dark);
     font-weight: 700;
-    font-size: 0.875rem;
-    padding: 0.75rem 1.35rem;
+    font-size: 0.9rem;
+    padding: 0.85rem 1.5rem;
     border-radius: var(--radius-full);
     border: 1px solid var(--color-outline-variant);
     transition: all 0.2s ease;
+    text-decoration: none;
   }
 
   .btn-ig-pill:hover {
     background-color: var(--color-surface-container-high);
     border-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .chef-empty-hint {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background-color: rgba(141, 75, 0, 0.05);
+    border: 1px dashed var(--color-primary);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .chef-hint-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    margin-bottom: 0.35rem;
+  }
+
+  .chef-hint-text {
+    font-size: 0.85rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .btn-chef-admin-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    padding: 0.4rem 0.85rem;
+    background-color: #ffffff;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary);
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-chef-admin-action:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
   }
 </style>

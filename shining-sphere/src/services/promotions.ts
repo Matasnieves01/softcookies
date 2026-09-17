@@ -2,11 +2,14 @@ import type { Promotion, Tanda } from '../types';
 import {
   getTandasFromDb,
   getTandaBySlugFromDb,
+  getTandaByIdFromDb,
   insertTandaToDb,
+  updateTandaInDb,
   toggleTandaStatusInDb,
   deleteTandaFromDb,
   fetchTandasClient,
   createTandaClient,
+  updateTandaClient,
   toggleTandaClient,
   deleteTandaClient
 } from './tandas';
@@ -69,6 +72,44 @@ export async function createPromotion(data: {
   return tanda;
 }
 
+export async function updatePromotion(
+  id: string,
+  data: {
+    name?: string;
+    subtitle?: string;
+    price?: number;
+    unit?: string;
+    image?: string;
+    shortDescription?: string;
+    longDescription?: string;
+    batchDates?: string;
+    deliveryDate?: string;
+    locations?: string[];
+    totalSlots?: number;
+    reservedSlots?: number;
+    isActive?: boolean;
+  }
+): Promise<Promotion> {
+  const tanda = await updateTandaClient(id, {
+    ...data,
+    deliveryDate: data.deliveryDate || data.batchDates
+  });
+
+  if (typeof window !== 'undefined') {
+    let all = getAllPromotions();
+    const index = all.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      all[index] = { ...all[index], ...tanda };
+    } else {
+      all.unshift(tanda);
+    }
+    localStorage.setItem(PROMOTIONS_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('softcookies:promotions-updated', { detail: tanda }));
+  }
+
+  return tanda;
+}
+
 export async function togglePromotionStatus(id: string): Promise<void> {
   await toggleTandaClient(id);
   if (typeof window !== 'undefined') {
@@ -95,11 +136,14 @@ export async function deletePromotion(id: string): Promise<void> {
 export {
   getTandasFromDb,
   getTandaBySlugFromDb,
+  getTandaByIdFromDb,
   insertTandaToDb,
+  updateTandaInDb,
   toggleTandaStatusInDb,
   deleteTandaFromDb,
   fetchTandasClient,
   createTandaClient,
+  updateTandaClient,
   toggleTandaClient,
   deleteTandaClient
 };

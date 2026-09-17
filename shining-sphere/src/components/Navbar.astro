@@ -3,53 +3,181 @@ interface Props {
   brandName?: string;
   badgeText?: string;
   instagramHandle?: string;
+  activeTab?: 'inicio' | 'tandas' | 'reservas' | 'perfil' | string;
 }
+
+const pathname = Astro.url.pathname;
+const defaultActiveTab = pathname === '/cuenta' ? 'perfil' : (pathname.startsWith('/producto') ? 'tandas' : 'inicio');
 
 const {
   brandName = "Soft Cookies",
   badgeText,
-  instagramHandle = "@softcookies.pty"
+  instagramHandle = "@softcookies.pty",
+  activeTab = defaultActiveTab
 } = Astro.props;
 ---
 
-<header class="navbar">
+<header class="navbar" aria-label="Cabecera principal">
   <div class="container navbar-container">
-    <a href="/" class="brand-group" aria-label="Ir al inicio de Soft Cookies">
-      <div class="logo-avatar">
-        <img src="/images/logo.jpeg" alt="Soft Cookies Logo" class="logo-img" width="48" height="48" />
-      </div>
-      <div class="brand-info">
-        <div class="title-row">
-          <span class="brand-title">{brandName}</span>
-          {badgeText && <span class="tandas-badge">{badgeText}</span>}
+    <!-- Fila Superior: Marca, Controles de Escritorio y Acciones -->
+    <div class="navbar-top-row">
+      <!-- Marca y Logotipo -->
+      <a href="/" class="brand-group" aria-label="Ir al inicio de Soft Cookies">
+        <div class="logo-avatar">
+          <img src="/images/logo.jpeg" alt="Soft Cookies Logo" class="logo-img" width="44" height="44" />
         </div>
-        <span class="brand-handle">
-          <svg viewBox="0 0 24 24" class="handle-icon" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm1.07-7.75l-.9.92C10.45 9.9 10 10.5 10 12h2c0-.55.45-1 1-1 .55 0 1-.45 1-1s-.45-1-1-1c-.55 0-1 .45-1 1H10c0-1.1.9-2 2-2s2 .9 2 2c0 .88-.72 1.45-1.93 1.75z"/>
-          </svg>
-          {instagramHandle}
-        </span>
-      </div>
-    </a>
-
-    <nav class="nav-actions" aria-label="Navegación principal">
-      <a 
-        href="https://instagram.com/softcookies.pty" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        class="btn-pill btn-subtle"
-        aria-label="Perfil de Instagram"
-      >
-        <span>IG</span>
+        <div class="brand-info">
+          <div class="title-row">
+            <span class="brand-title">{brandName}</span>
+            {badgeText && <span class="tandas-badge">{badgeText}</span>}
+          </div>
+          <span class="brand-handle">
+            <svg viewBox="0 0 24 24" class="handle-icon" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2v-2zm1.07-7.75l-.9.92C10.45 9.9 10 10.5 10 12h2c0-.55.45-1 1-1 .55 0 1-.45 1-1s-.45-1-1-1c-.55 0-1 .45-1 1H10c0-1.1.9-2 2-2s2 .9 2 2c0 .88-.72 1.45-1.93 1.75z"/>
+            </svg>
+            {instagramHandle}
+          </span>
+        </div>
       </a>
 
-      <!-- Botón de Cuenta -->
-      <button type="button" id="nav-account-btn" class="btn-pill btn-account" aria-label="Abrir mi cuenta">
-        <svg viewBox="0 0 24 24" class="action-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
+      <!-- Controles Superiores para Pantallas Medianas y Grandes (Desktop Nav) -->
+      <nav class="nav-controls-desktop" aria-label="Navegación principal superior">
+        <a 
+          href="/" 
+          class={`nav-link nav-btn-inicio ${activeTab === 'inicio' ? 'active' : ''}`} 
+          aria-label="Ir al inicio"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Inicio</span>
+        </a>
+
+        <a 
+          href="/#tandas" 
+          class={`nav-link nav-btn-tandas ${activeTab === 'tandas' ? 'active' : ''}`} 
+          aria-label="Ver tandas activas"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2c1.5 3 4 4.5 4 8a6 6 0 1 1-12 0c0-3.5 2.5-5 4-8 1 2 2 3 4 0z"></path>
+          </svg>
+          <span>Tandas</span>
+        </a>
+
+        <a 
+          href="/cuenta#reservas" 
+          class={`nav-link nav-btn-reservas ${activeTab === 'reservas' ? 'active' : ''}`} 
+          aria-label="Consultar mis reservas"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Mis Reservas</span>
+        </a>
+
+        <a 
+          href="/admin" 
+          class="nav-link nav-admin-btn" 
+          style="display: none;" 
+          aria-label="Panel de Administrador Chef"
+        >
+          <span>👩‍🍳 Admin</span>
+        </a>
+      </nav>
+
+      <!-- Botones de Acción Superiores -->
+      <div class="nav-actions">
+        <!-- Enlace a Instagram -->
+        <a 
+          href="https://instagram.com/softcookies.pty" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="btn-pill btn-ig"
+          aria-label="Perfil de Instagram @softcookies.pty"
+          title="Instagram @softcookies.pty"
+        >
+          <svg viewBox="0 0 24 24" class="ig-icon" fill="currentColor">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          <span class="ig-text">IG</span>
+        </a>
+
+        <!-- Botón de Acceso Admin en Móvil (solo visible si la cuenta admin inició sesión) -->
+        <a 
+          href="/admin" 
+          class="btn-pill btn-admin-mobile nav-admin-btn" 
+          style="display: none;" 
+          aria-label="Ir al panel de administración"
+        >
+          <span>👩‍🍳 Admin</span>
+        </a>
+
+        <!-- Botón de Cuenta en Desktop -->
+        <button type="button" class="btn-pill btn-account nav-btn-account desktop-only-btn" aria-label="Abrir mi cuenta">
+          <svg viewBox="0 0 24 24" class="action-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          </svg>
+          <span class="nav-account-text">Mi Cuenta</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila Inferior Móvil: Barra de Controles Superiores Integrada (Tier 2) -->
+    <nav class="nav-controls-mobile" aria-label="Controles de navegación móvil">
+      <a 
+        href="/" 
+        class={`mobile-control nav-btn-inicio ${activeTab === 'inicio' ? 'active' : ''}`} 
+        aria-label="Ir al inicio"
+      >
+        <svg viewBox="0 0 24 24" class="mobile-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
-        <span id="nav-account-text">Mi Cuenta</span>
+        <span class="mobile-label">Inicio</span>
+      </a>
+
+      <a 
+        href="/#tandas" 
+        class={`mobile-control nav-btn-tandas ${activeTab === 'tandas' ? 'active' : ''}`} 
+        aria-label="Ver tandas activas"
+      >
+        <svg viewBox="0 0 24 24" class="mobile-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2c1.5 3 4 4.5 4 8a6 6 0 1 1-12 0c0-3.5 2.5-5 4-8 1 2 2 3 4 0z"></path>
+        </svg>
+        <span class="mobile-label">Tandas</span>
+      </a>
+
+      <a 
+        href="/cuenta#reservas" 
+        class={`mobile-control nav-btn-reservas ${activeTab === 'reservas' ? 'active' : ''}`} 
+        aria-label="Mis reservas"
+      >
+        <svg viewBox="0 0 24 24" class="mobile-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span class="mobile-label">Reservas</span>
+      </a>
+
+      <button 
+        type="button" 
+        class={`mobile-control nav-btn-account ${activeTab === 'perfil' ? 'active' : ''}`} 
+        aria-label="Mi Perfil"
+      >
+        <svg viewBox="0 0 24 24" class="mobile-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="7" r="4"></circle>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        </svg>
+        <span class="mobile-label nav-account-text">Mi Perfil</span>
       </button>
     </nav>
   </div>
@@ -58,58 +186,116 @@ const {
 <script>
   import { getCurrentUser } from '../services/auth';
 
-  const accountBtn = document.getElementById('nav-account-btn');
-  const accountText = document.getElementById('nav-account-text');
-
   function updateNavAuth() {
     const user = getCurrentUser();
-    if (user) {
-      if (accountText) {
-        accountText.textContent = user.name.split(' ')[0] || 'Mi Cuenta';
+    const accountTexts = document.querySelectorAll('.nav-account-text');
+    const adminBtns = document.querySelectorAll('.nav-admin-btn');
+
+    accountTexts.forEach((el) => {
+      if (user) {
+        el.textContent = user.name.split(' ')[0] || 'Mi Cuenta';
+      } else {
+        el.textContent = el.classList.contains('mobile-label') ? 'Mi Perfil' : 'Mi Cuenta';
       }
-    } else {
-      if (accountText) accountText.textContent = 'Mi Cuenta';
-    }
+    });
+
+    adminBtns.forEach((el) => {
+      (el as HTMLElement).style.display = user?.role === 'admin' ? 'inline-flex' : 'none';
+    });
   }
 
-  // Initial check
+  // Comprobación inicial de sesión
   updateNavAuth();
 
-  // Listen to auth changes
+  // Escuchar cambios de autenticación
   window.addEventListener('softcookies:auth-changed', updateNavAuth);
 
-  accountBtn?.addEventListener('click', () => {
-    const user = getCurrentUser();
-    if (user) {
-      window.location.href = '/cuenta';
-    } else {
-      window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
-    }
+  // Manejo de botones de cuenta (escritorio y móvil)
+  document.querySelectorAll('.nav-btn-account').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const user = getCurrentUser();
+      if (user) {
+        if (window.location.pathname === '/cuenta') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          window.location.href = '/cuenta';
+        }
+      } else {
+        window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
+      }
+    });
+  });
+
+  // Manejo de botones de Reservas
+  document.querySelectorAll('.nav-btn-reservas').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const user = getCurrentUser();
+      if (!user) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('softcookies:open-auth'));
+      } else if (window.location.pathname === '/cuenta') {
+        e.preventDefault();
+        const ordersEl = document.getElementById('reservas') || document.getElementById('orders-title') || document.querySelector('.orders-section');
+        ordersEl?.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Manejo de enlaces a Tandas con scroll suave en inicio
+  document.querySelectorAll('.nav-btn-tandas').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if (window.location.pathname === '/') {
+        e.preventDefault();
+        const tandasEl = document.getElementById('tandas') || document.getElementById('tandas-container');
+        tandasEl?.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Manejo de enlace a Inicio
+  document.querySelectorAll('.nav-btn-inicio').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if (window.location.pathname === '/') {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
   });
 </script>
 
 <style>
   .navbar {
-    background-color: var(--color-surface);
+    background-color: rgba(254, 249, 241, 0.96);
     border-bottom: 1px solid var(--color-border-subtle);
-    padding: 0.85rem 0;
     position: sticky;
     top: 0;
-    z-index: 40;
-    backdrop-filter: blur(8px);
+    z-index: 50;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 18px rgba(74, 40, 16, 0.04);
   }
 
   .navbar-container {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
   }
 
+  /* Fila superior con marca, controles desktop y acciones */
+  .navbar-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0;
+    gap: 1rem;
+  }
+
+  /* Marca */
   .brand-group {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     transition: transform 0.2s ease;
+    flex-shrink: 0;
   }
 
   .brand-group:hover {
@@ -117,8 +303,8 @@ const {
   }
 
   .logo-avatar {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: var(--radius-full);
     overflow: hidden;
     box-shadow: 0 3px 10px rgba(141, 75, 0, 0.16);
@@ -140,7 +326,7 @@ const {
   .brand-info {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.12rem;
   }
 
   .title-row {
@@ -159,9 +345,9 @@ const {
   .tandas-badge {
     background-color: #6a3443;
     color: #ffffff;
-    font-size: 0.65rem;
+    font-size: 0.625rem;
     font-weight: 800;
-    padding: 0.2rem 0.55rem;
+    padding: 0.18rem 0.5rem;
     border-radius: var(--radius-full);
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -182,10 +368,64 @@ const {
     opacity: 0.8;
   }
 
+  /* Controles de Navegación de Escritorio */
+  .nav-controls-desktop {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-on-surface-variant);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary);
+    background-color: rgba(141, 75, 0, 0.06);
+  }
+
+  .nav-link.active {
+    color: var(--color-primary);
+    background-color: var(--color-surface-container);
+    border-color: var(--color-outline-variant);
+    box-shadow: 0 2px 6px rgba(74, 40, 16, 0.06);
+  }
+
+  .nav-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .nav-link.active .nav-icon {
+    stroke-width: 2.3;
+  }
+
+  .nav-admin-btn {
+    background-color: #fff0f3;
+    color: #87495a;
+    border: 1px solid #ffd9e0;
+  }
+
+  .btn-admin-mobile {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  /* Botones de acción derecha */
   .nav-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
   }
 
   .btn-pill {
@@ -210,9 +450,22 @@ const {
     box-shadow: 0 2px 6px rgba(74, 40, 16, 0.08);
   }
 
-  .btn-subtle {
-    min-width: 40px;
-    padding: 0.45rem 0.75rem;
+  .btn-ig {
+    padding: 0.45rem 0.8rem;
+    color: #87495a;
+    border-color: rgba(135, 73, 90, 0.3);
+    background-color: rgba(255, 217, 224, 0.2);
+  }
+
+  .btn-ig:hover {
+    background-color: rgba(255, 217, 224, 0.45);
+    border-color: #87495a;
+    color: #6a3443;
+  }
+
+  .ig-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .btn-account {
@@ -222,5 +475,85 @@ const {
   .action-icon {
     width: 15px;
     height: 15px;
+  }
+
+  /* Barra de Controles Móvil Superior (Fila 2) */
+  .nav-controls-mobile {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+    padding: 0.35rem 0 0.45rem 0;
+    border-top: 1px solid rgba(74, 40, 16, 0.08);
+  }
+
+  .mobile-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.35rem 0.2rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-on-surface-muted);
+    font-size: 0.725rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    text-align: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-control:hover,
+  .mobile-control:active {
+    color: var(--color-primary);
+  }
+
+  .mobile-control.active {
+    color: var(--color-primary);
+    background-color: rgba(141, 75, 0, 0.08);
+    font-weight: 800;
+  }
+
+  .mobile-icon {
+    width: 19px;
+    height: 19px;
+  }
+
+  .mobile-control.active .mobile-icon {
+    stroke-width: 2.4;
+  }
+
+  .mobile-label {
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Responsive: Pantallas Medianas y Grandes (Desktop >= 768px) */
+  @media (min-width: 768px) {
+    .navbar-top-row {
+      padding: 0.8rem 0;
+    }
+
+    .logo-avatar {
+      width: 48px;
+      height: 48px;
+    }
+
+    .nav-controls-desktop {
+      display: flex;
+    }
+
+    /* Ocultar barra inferior de controles en escritorio */
+    .nav-controls-mobile {
+      display: none;
+    }
+
+    .desktop-only-btn {
+      display: inline-flex;
+    }
   }
 </style>

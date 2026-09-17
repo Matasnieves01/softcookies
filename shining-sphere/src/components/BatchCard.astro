@@ -27,11 +27,12 @@ const {
   totalCount = 25
 } = Astro.props;
 
-const remainingCount = totalCount - reservedCount;
-const progressPercentage = Math.round((reservedCount / totalCount) * 100);
+const remainingCount = Math.max(0, totalCount - reservedCount);
+const isSoldOut = remainingCount <= 0;
+const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCount) * 100);
 ---
 
-<article class="batch-card" aria-label={`Tanda de ${title}`}>
+<article class={`batch-card ${isSoldOut ? 'card-sold-out' : ''}`} aria-label={`Tanda de ${title}`}>
   <div class="card-grid">
     <!-- Visual Showcase Column (Clean without stickers or floating badges) -->
     <div class="visual-col">
@@ -42,6 +43,9 @@ const progressPercentage = Math.round((reservedCount / totalCount) * 100);
           class="product-image"
           loading="lazy"
         />
+        {isSoldOut && (
+          <span class="badge-sold-out-overlay">🚫 Cupos Agotados</span>
+        )}
       </div>
     </div>
 
@@ -74,26 +78,43 @@ const progressPercentage = Math.round((reservedCount / totalCount) * 100);
       </div>
 
       <!-- Scarcity & Progress Tracker -->
-      <div class="scarcity-box">
+      <div class={`scarcity-box ${isSoldOut ? 'is-sold-out' : ''}`}>
         <div class="scarcity-labels">
-          <span class="remaining-text">
-            <span class="fire-emoji">🔥</span> Solo quedan {remainingCount} cupos
-          </span>
-          <span class="reserved-text">{reservedCount} de {totalCount} reservados</span>
+          {isSoldOut ? (
+            <span class="remaining-text sold-out-text">
+              🚫 Cupos agotados
+            </span>
+            <span class="reserved-text">{totalCount} de {totalCount} reservados (100%)</span>
+          ) : (
+            <span class="remaining-text">
+              <span class="fire-emoji">🔥</span> Solo quedan {remainingCount} cupos
+            </span>
+            <span class="reserved-text">{reservedCount} de {totalCount} reservados</span>
+          )}
         </div>
 
-        <div class="progress-track" role="progressbar" aria-valuenow={reservedCount} aria-valuemin="0" aria-valuemax={totalCount}>
-          <div class="progress-bar" style={`width: ${progressPercentage}%`}></div>
+        <div class="progress-track" role="progressbar" aria-valuenow={isSoldOut ? totalCount : reservedCount} aria-valuemin="0" aria-valuemax={totalCount}>
+          <div class={`progress-bar ${isSoldOut ? 'bar-sold-out' : ''}`} style={`width: ${progressPercentage}%`}></div>
         </div>
       </div>
 
       <!-- Main Action Button -->
-      <a href={`/producto/${slug}`} class="cta-button">
-        <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        <span>Ver detalles y reservar</span>
-      </a>
+      {isSoldOut ? (
+        <a href={`/producto/${slug}`} class="cta-button btn-sold-out">
+          <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+          <span>Tanda completa • Ver detalles</span>
+        </a>
+      ) : (
+        <a href={`/producto/${slug}`} class="cta-button">
+          <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Ver detalles y reservar</span>
+        </a>
+      )}
     </div>
   </div>
 </article>
@@ -319,5 +340,49 @@ const progressPercentage = Math.round((reservedCount / totalCount) * 100);
   .btn-check-icon {
     width: 18px;
     height: 18px;
+  }
+
+  /* Sold Out Visual States */
+  .card-sold-out {
+    opacity: 0.96;
+    border-color: rgba(186, 26, 26, 0.2);
+  }
+
+  .badge-sold-out-overlay {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    background-color: #ba1a1a;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px rgba(186, 26, 26, 0.4);
+    z-index: 2;
+  }
+
+  .sold-out-text {
+    color: #ba1a1a !important;
+    font-weight: 800;
+  }
+
+  .bar-sold-out {
+    background: linear-gradient(90deg, #93000a 0%, #ba1a1a 100%) !important;
+  }
+
+  .btn-sold-out {
+    background-color: var(--color-surface-container-high) !important;
+    color: var(--color-on-surface-variant) !important;
+    border: 1px solid var(--color-outline-variant);
+    box-shadow: none !important;
+  }
+
+  .btn-sold-out:hover {
+    background-color: var(--color-surface-container-highest) !important;
+    color: var(--color-on-surface) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   }
 </style>

@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import TopBanner from '../components/TopBanner.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import BottomNav from '../components/BottomNav.astro';
 ---
 
 <Layout 
@@ -11,7 +10,7 @@ import BottomNav from '../components/BottomNav.astro';
   description="Consulta tu perfil de cliente y el estado de tus reservas de tandas en Soft Cookies."
 >
   <TopBanner text="• MI CUENTA • SOFT COOKIES TANDAS" />
-  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" activeTab="perfil" />
 
   <main class="account-page">
     <div class="container">
@@ -54,7 +53,7 @@ import BottomNav from '../components/BottomNav.astro';
         </header>
 
         <!-- Sección de Reservas -->
-        <section class="orders-section" aria-labelledby="orders-title">
+        <section id="reservas" class="orders-section" aria-labelledby="orders-title">
           <div class="section-title-row">
             <h2 id="orders-title" class="section-heading">Mis Reservas de Tandas</h2>
             <a href="/" class="btn-new-order">+ Reservar Otra Tanda</a>
@@ -71,17 +70,150 @@ import BottomNav from '../components/BottomNav.astro';
           <!-- Listado de Pedidos -->
           <div id="orders-list" class="orders-grid"></div>
         </section>
+
+        <!-- MODAL PARA MODIFICAR RESERVA -->
+        <div 
+          id="edit-order-modal" 
+          class="admin-modal-overlay" 
+          style="display: none;" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="edit-order-modal-title"
+        >
+          <div class="admin-modal-backdrop" id="edit-order-backdrop"></div>
+          <div class="admin-modal-dialog" style="max-width: 520px;">
+            <div class="admin-modal-header">
+              <div class="modal-title-wrap">
+                <span class="modal-badge-pill">✏️ Modificar Reserva</span>
+                <h3 class="modal-title" id="edit-order-modal-title">Editar Mi Reserva</h3>
+                <p class="modal-subtitle">Actualiza la cantidad, punto de entrega o indicaciones especiales</p>
+              </div>
+              <button type="button" id="btn-close-edit-order" class="btn-modal-close" aria-label="Cerrar modal">
+                ✕
+              </button>
+            </div>
+
+            <form id="edit-order-form" class="admin-modal-form">
+              <div class="admin-modal-body">
+                <input type="hidden" id="edit-order-id" />
+                <input type="hidden" id="edit-order-unit-price" />
+
+                <!-- Banner Resumen del Producto -->
+                <div class="order-edit-product-banner">
+                  <div>
+                    <span class="edit-product-label">Tanda Seleccionada</span>
+                    <h4 class="edit-product-name" id="edit-order-product-name">Tarta Vasca</h4>
+                  </div>
+                  <span class="edit-product-price" id="edit-order-price-badge">$0.00 c/u</span>
+                </div>
+
+                <!-- Cantidad con Controles Interactivos -->
+                <div class="edit-field-group">
+                  <label class="edit-field-label" for="edit-order-quantity">
+                    Cantidad de Porciones / Unidades <span class="required-star">*</span>
+                  </label>
+                  
+                  <div class="qty-and-total-row">
+                    <div class="quantity-control-pill">
+                      <button type="button" class="btn-qty-step" id="btn-qty-minus" aria-label="Disminuir cantidad">−</button>
+                      <input 
+                        type="number" 
+                        id="edit-order-quantity" 
+                        min="1" 
+                        max="50" 
+                        value="1" 
+                        required 
+                        class="qty-input" 
+                      />
+                      <button type="button" class="btn-qty-step" id="btn-qty-plus" aria-label="Aumentar cantidad">+</button>
+                    </div>
+
+                    <div class="edit-total-preview-box">
+                      <span class="total-preview-label">Total recalculado:</span>
+                      <strong class="total-preview-val" id="edit-order-total-preview">$0.00</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Lugar de Entrega -->
+                <div class="edit-field-group">
+                  <label class="edit-field-label" for="edit-order-location">
+                    Zona / Punto de Entrega <span class="required-star">*</span>
+                  </label>
+                  <select id="edit-order-location" class="select-input" required>
+                    <option value="Tierras Altas (Puntos céntricos)">Tierras Altas (Puntos céntricos)</option>
+                    <option value="Bugaba (Entregas programadas)">Bugaba (Entregas programadas)</option>
+                    <option value="David (Plaza / Delivery)">David (Plaza / Delivery)</option>
+                  </select>
+                </div>
+
+                <!-- Notas -->
+                <div class="edit-field-group">
+                  <label class="edit-field-label" for="edit-order-notes">
+                    Notas / Indicaciones Especiales <span class="optional-hint">(opcional)</span>
+                  </label>
+                  <textarea 
+                    id="edit-order-notes" 
+                    rows="3" 
+                    placeholder="Dedicatoria, indicaciones de llegada, velita de cumpleaños..." 
+                    class="edit-textarea-input"
+                  ></textarea>
+                </div>
+
+                <div id="edit-order-feedback" class="admin-success-msg" style="display: none;"></div>
+              </div>
+
+              <div class="admin-modal-footer">
+                <button type="button" id="btn-cancel-edit-order" class="btn-modal-cancel">
+                  ✕ Volver
+                </button>
+                <button type="submit" class="btn-modal-submit-save">
+                  💾 Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- MODAL PARA CONFIRMAR CANCELACIÓN DE RESERVA -->
+        <div 
+          id="cancel-order-modal" 
+          class="admin-modal-overlay" 
+          style="display: none;" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="cancel-order-title"
+        >
+          <div class="admin-modal-backdrop" id="cancel-order-backdrop"></div>
+          <div class="confirm-modal-dialog">
+            <div class="confirm-modal-icon-wrap is-warning">
+              <span class="confirm-modal-icon">⚠️</span>
+            </div>
+            <h3 class="confirm-modal-title" id="cancel-order-title">¿Cancelar tu reserva?</h3>
+            <p class="confirm-modal-desc" id="cancel-order-desc">
+              Estás a punto de cancelar tu reserva. Tu cupo será liberado para otros clientes en el catálogo.
+            </p>
+            
+            <div class="confirm-modal-actions">
+              <button type="button" id="btn-keep-order" class="btn-confirm-cancel">
+                No, Conservar
+              </button>
+              <button type="button" id="btn-confirm-cancel-order" class="btn-confirm-danger">
+                <span>Sí, Cancelar Reserva</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
   <Footer />
-  <BottomNav activeTab="perfil" />
 </Layout>
 
 <script>
   import { getCurrentUser, logoutUser } from '../services/auth';
-  import { getOrdersByUser } from '../services/orders';
+  import { getOrdersByUser, getOrderById, updateOrder, cancelOrder } from '../services/orders';
   import type { Order } from '../types';
 
   const unauthView = document.getElementById('unauthenticated-view') as HTMLElement;
@@ -96,6 +228,32 @@ import BottomNav from '../components/BottomNav.astro';
   const userAvatar = document.getElementById('user-avatar') as HTMLElement;
   const emptyOrders = document.getElementById('empty-orders') as HTMLElement;
   const ordersList = document.getElementById('orders-list') as HTMLElement;
+
+  // Edit Order Modal Elements
+  const editOrderModal = document.getElementById('edit-order-modal') as HTMLElement;
+  const editOrderBackdrop = document.getElementById('edit-order-backdrop') as HTMLElement;
+  const btnCloseEditOrder = document.getElementById('btn-close-edit-order') as HTMLElement;
+  const btnCancelEditOrder = document.getElementById('btn-cancel-edit-order') as HTMLElement;
+  const editOrderForm = document.getElementById('edit-order-form') as HTMLFormElement;
+  const editOrderId = document.getElementById('edit-order-id') as HTMLInputElement;
+  const editOrderUnitPrice = document.getElementById('edit-order-unit-price') as HTMLInputElement;
+  const editOrderProductName = document.getElementById('edit-order-product-name') as HTMLElement;
+  const editOrderPriceBadge = document.getElementById('edit-order-price-badge') as HTMLElement;
+  const editOrderQty = document.getElementById('edit-order-quantity') as HTMLInputElement;
+  const btnQtyMinus = document.getElementById('btn-qty-minus') as HTMLButtonElement;
+  const btnQtyPlus = document.getElementById('btn-qty-plus') as HTMLButtonElement;
+  const editOrderTotalPreview = document.getElementById('edit-order-total-preview') as HTMLElement;
+  const editOrderLocation = document.getElementById('edit-order-location') as HTMLSelectElement;
+  const editOrderNotes = document.getElementById('edit-order-notes') as HTMLTextAreaElement;
+  const editOrderFeedback = document.getElementById('edit-order-feedback') as HTMLElement;
+
+  // Cancel Order Modal Elements
+  const cancelOrderModal = document.getElementById('cancel-order-modal') as HTMLElement;
+  const cancelOrderBackdrop = document.getElementById('cancel-order-backdrop') as HTMLElement;
+  const btnKeepOrder = document.getElementById('btn-keep-order') as HTMLElement;
+  const btnConfirmCancelOrder = document.getElementById('btn-confirm-cancel-order') as HTMLElement;
+  const cancelOrderDesc = document.getElementById('cancel-order-desc') as HTMLElement;
+  let orderIdToCancel: string | null = null;
 
   function renderAccount() {
     const user = getCurrentUser();
@@ -156,33 +314,234 @@ import BottomNav from '../components/BottomNav.astro';
           statusLabel = 'Cupo Confirmado ✓';
         } else if (order.status === 'delivered') {
           statusClass = 'status-delivered';
-          statusLabel = 'Entregado';
+          statusLabel = 'Entregado ✓';
+        } else if (order.status === 'cancelled') {
+          statusClass = 'status-cancelled';
+          statusLabel = 'Cancelada ✕';
         }
 
+        const isCancelled = order.status === 'cancelled';
+        const isDelivered = order.status === 'delivered';
+        const canModify = !isCancelled && !isDelivered;
+
+        const waText = encodeURIComponent(
+          `Hola Chef Chelsea! 👩‍🍳 Consulto sobre mi reserva ${order.orderNumber} de ${order.item.productName} ($${order.total.toFixed(2)}).`
+        );
+
         return `
-          <div class="order-card">
+          <article class="order-card ${isCancelled ? 'is-cancelled' : ''}">
             <div class="order-card-header">
-              <div>
+              <div class="order-code-wrap">
                 <span class="order-code">${order.orderNumber}</span>
-                <span class="order-date">${dateStr}</span>
+                <span class="order-date">📅 ${dateStr}</span>
               </div>
               <span class="order-status-badge ${statusClass}">${statusLabel}</span>
             </div>
 
             <div class="order-card-body">
               <h3 class="order-product-name">${order.item.productName}</h3>
-              <p class="order-meta">
-                <strong>Cantidad:</strong> ${order.item.quantity} | 
-                <strong>Total:</strong> $${order.total.toFixed(2)}
-              </p>
-              <p class="order-location">📍 <strong>Entrega:</strong> ${order.pickupLocation}</p>
-              ${order.notes ? `<p class="order-notes">📝 <em>"${order.notes}"</em></p>` : ''}
+              
+              <div class="order-meta-chips">
+                <span class="order-chip">📦 ${order.item.quantity} ${order.item.quantity === 1 ? 'unidad' : 'unidades'}</span>
+                <span class="order-chip">🏷️ $${order.item.unitPrice.toFixed(2)} c/u</span>
+                <span class="order-chip chip-highlight">💵 Total: $${order.total.toFixed(2)}</span>
+              </div>
+
+              <div class="order-chip" style="width: fit-content; background: #fffdf9;">
+                📍 <strong>Entrega:</strong>&nbsp;${order.pickupLocation}
+              </div>
+
+              ${order.notes ? `
+                <div class="order-notes-box">
+                  <strong>Indicaciones:</strong> <em>"${order.notes}"</em>
+                </div>
+              ` : ''}
             </div>
-          </div>
+
+            <div class="order-card-actions">
+              ${canModify ? `
+                <button 
+                  type="button" 
+                  class="btn-order-action btn-order-modify" 
+                  data-order-id="${order.id}"
+                  title="Modificar cantidad o punto de entrega"
+                >
+                  ✏️ Modificar
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-order-action btn-order-cancel" 
+                  data-order-id="${order.id}"
+                  title="Cancelar esta reserva"
+                >
+                  ✕ Cancelar
+                </button>
+              ` : isCancelled ? `
+                <span style="font-size: 0.8rem; color: var(--color-error); font-weight: 700;">
+                  ✕ Reserva cancelada
+                </span>
+              ` : `
+                <span style="font-size: 0.8rem; color: var(--color-secondary-dark); font-weight: 700;">
+                  ✓ Pedido completado y entregado
+                </span>
+              `}
+
+              <a 
+                href="https://wa.me/50760000000?text=${waText}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="btn-order-action btn-order-wa"
+                title="Consultar por WhatsApp"
+              >
+                💬 WhatsApp
+              </a>
+            </div>
+          </article>
         `;
       })
       .join('');
   }
+
+  // Live total preview in edit modal
+  function updateEditTotalPreview() {
+    const unitPrice = parseFloat(editOrderUnitPrice?.value) || 0;
+    const qty = parseInt(editOrderQty?.value, 10) || 1;
+    const total = unitPrice * qty;
+    if (editOrderTotalPreview) {
+      editOrderTotalPreview.textContent = `$${total.toFixed(2)}`;
+    }
+  }
+
+  btnQtyMinus?.addEventListener('click', () => {
+    let val = parseInt(editOrderQty.value, 10) || 1;
+    if (val > 1) {
+      editOrderQty.value = String(val - 1);
+      updateEditTotalPreview();
+    }
+  });
+
+  btnQtyPlus?.addEventListener('click', () => {
+    let val = parseInt(editOrderQty.value, 10) || 1;
+    if (val < 50) {
+      editOrderQty.value = String(val + 1);
+      updateEditTotalPreview();
+    }
+  });
+
+  editOrderQty?.addEventListener('input', () => {
+    let val = parseInt(editOrderQty.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 50) val = 50;
+    updateEditTotalPreview();
+  });
+
+  function openEditOrderModal(orderId: string) {
+    const order = getOrderById(orderId);
+    if (!order) return;
+
+    if (editOrderId) editOrderId.value = order.id;
+    if (editOrderUnitPrice) editOrderUnitPrice.value = String(order.item.unitPrice);
+    if (editOrderProductName) editOrderProductName.textContent = order.item.productName;
+    if (editOrderPriceBadge) editOrderPriceBadge.textContent = `$${order.item.unitPrice.toFixed(2)} c/u`;
+    if (editOrderQty) editOrderQty.value = String(order.item.quantity);
+    if (editOrderLocation) editOrderLocation.value = order.pickupLocation;
+    if (editOrderNotes) editOrderNotes.value = order.notes || '';
+    if (editOrderFeedback) {
+      editOrderFeedback.style.display = 'none';
+      editOrderFeedback.textContent = '';
+    }
+
+    updateEditTotalPreview();
+    if (editOrderModal) editOrderModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEditOrderModal() {
+    if (editOrderModal) editOrderModal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function openCancelOrderModal(orderId: string) {
+    const order = getOrderById(orderId);
+    if (!order) return;
+    orderIdToCancel = orderId;
+
+    if (cancelOrderDesc) {
+      cancelOrderDesc.innerHTML = `¿Estás seguro de que deseas cancelar tu reserva <strong>${order.orderNumber}</strong> (${order.item.productName})? Tu cupo será liberado para otros clientes en el catálogo.`;
+    }
+    if (cancelOrderModal) cancelOrderModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCancelOrderModal() {
+    orderIdToCancel = null;
+    if (cancelOrderModal) cancelOrderModal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Delegated clicks on orders list for modify and cancel buttons
+  ordersList?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const modifyBtn = target.closest('.btn-order-modify') as HTMLElement;
+    const cancelBtn = target.closest('.btn-order-cancel') as HTMLElement;
+
+    if (modifyBtn) {
+      const orderId = modifyBtn.dataset.orderId;
+      if (orderId) openEditOrderModal(orderId);
+    } else if (cancelBtn) {
+      const orderId = cancelBtn.dataset.orderId;
+      if (orderId) openCancelOrderModal(orderId);
+    }
+  });
+
+  // Edit order form submission
+  editOrderForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const orderId = editOrderId.value;
+    const quantity = parseInt(editOrderQty.value, 10) || 1;
+    const pickupLocation = editOrderLocation.value;
+    const notes = editOrderNotes.value;
+
+    const updated = updateOrder(orderId, {
+      quantity,
+      pickupLocation,
+      notes
+    });
+
+    if (updated) {
+      if (editOrderFeedback) {
+        editOrderFeedback.textContent = '✓ ¡Tu reserva ha sido modificada con éxito!';
+        editOrderFeedback.style.display = 'block';
+      }
+      setTimeout(() => {
+        closeEditOrderModal();
+        renderAccount();
+      }, 500);
+    }
+  });
+
+  // Cancel order confirmation
+  btnConfirmCancelOrder?.addEventListener('click', () => {
+    if (!orderIdToCancel) return;
+    cancelOrder(orderIdToCancel);
+    closeCancelOrderModal();
+    renderAccount();
+  });
+
+  // Modal dismiss buttons
+  btnCloseEditOrder?.addEventListener('click', closeEditOrderModal);
+  btnCancelEditOrder?.addEventListener('click', closeEditOrderModal);
+  editOrderBackdrop?.addEventListener('click', closeEditOrderModal);
+
+  btnKeepOrder?.addEventListener('click', closeCancelOrderModal);
+  cancelOrderBackdrop?.addEventListener('click', closeCancelOrderModal);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeEditOrderModal();
+      closeCancelOrderModal();
+    }
+  });
 
   // Initial render
   renderAccount();
@@ -197,7 +556,7 @@ import BottomNav from '../components/BottomNav.astro';
 
   logoutBtn?.addEventListener('click', () => {
     logoutUser();
-    renderAccount();
+    window.location.href = '/';
   });
 </script>
 
@@ -414,94 +773,6 @@ import BottomNav from '../components/BottomNav.astro';
     margin-bottom: 1.5rem;
   }
 
-  .orders-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-
-  @media (min-width: 640px) {
-    .orders-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .order-card {
-    background-color: var(--color-surface-card);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--color-border-subtle);
-    box-shadow: var(--shadow-card);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .order-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 0.65rem;
-    border-bottom: 1px solid var(--color-surface-container-high);
-  }
-
-  .order-code {
-    font-size: 0.875rem;
-    font-weight: 800;
-    color: var(--color-secondary-dark);
-    display: block;
-  }
-
-  .order-date {
-    font-size: 0.75rem;
-    color: var(--color-on-surface-muted);
-  }
-
-  .order-status-badge {
-    font-size: 0.72rem;
-    font-weight: 800;
-    padding: 0.25rem 0.65rem;
-    border-radius: var(--radius-full);
-  }
-
-  .status-pending {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
-  .status-confirmed {
-    background-color: #d1fae5;
-    color: #065f46;
-  }
-
-  .status-delivered {
-    background-color: var(--color-surface-container-high);
-    color: var(--color-on-surface-muted);
-  }
-
-  .order-product-name {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--color-on-surface);
-    margin-bottom: 0.25rem;
-  }
-
-  .order-meta {
-    font-size: 0.875rem;
-    color: var(--color-on-surface-variant);
-    margin-bottom: 0.2rem;
-  }
-
-  .order-location {
-    font-size: 0.825rem;
-    color: var(--color-on-surface-variant);
-  }
-
-  .order-notes {
-    font-size: 0.8rem;
-    color: var(--color-on-surface-muted);
-    margin-top: 0.35rem;
-  }
 
   .btn-primary-pill {
     display: inline-flex;

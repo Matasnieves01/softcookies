@@ -3,7 +3,6 @@ import Layout from '../../layouts/Layout.astro';
 import TopBanner from '../../components/TopBanner.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
-import BottomNav from '../../components/BottomNav.astro';
 import { getTandaBySlugFromDb, getCloudflareDb } from '../../services/tandas';
 import type { Tanda } from '../../types';
 
@@ -37,6 +36,7 @@ const product: Tanda = tanda || {
 
 const isFound = tanda !== null;
 const remainingSlots = Math.max(0, product.totalSlots - product.reservedSlots);
+const isSoldOut = remainingSlots <= 0;
 const details = product.details && product.details.length ? product.details : ['Elaboración artesanal por tanda limitada', 'Ingredientes frescos de alta calidad', 'Empaque protector individual para máxima frescura'];
 const ingredients = product.ingredients && product.ingredients.length ? product.ingredients : ['Receta especial de la Chef Chelsea', 'Mantequilla pura', 'Ingredientes seleccionados'];
 ---
@@ -46,7 +46,7 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
   description={product.shortDescription}
 >
   <TopBanner text="• RESERVAS DE TANDA • CUPOS LIMITADOS" />
-  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" />
+  <Navbar brandName="Soft Cookies" instagramHandle="@softcookies.pty" activeTab="tandas" />
 
   <main class="product-page">
     <div class="container">
@@ -99,13 +99,20 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
               </div>
             </div>
 
-            <div class="scarcity-indicator">
+            <div class={`scarcity-indicator ${isSoldOut ? 'is-sold-out' : ''}`} id="scarcity-indicator-wrap" data-total-slots={product.totalSlots} data-base-reserved={product.reservedSlots}>
               <div class="scarcity-label-row">
-                <span class="slots-left">🔥 Solo quedan {remainingSlots} cupos</span>
-                <span class="slots-total">{product.reservedSlots} de {product.totalSlots} reservados</span>
+                <span class={`slots-left ${isSoldOut ? 'sold-out-text' : ''}`} id="slots-left-text">
+                  {isSoldOut ? '🚫 Cupos Agotados' : `🔥 Solo quedan ${remainingSlots} cupos`}
+                </span>
+                <span class="slots-total" id="slots-total-text">
+                  {isSoldOut 
+                    ? `${product.totalSlots} de ${product.totalSlots} reservados (100%)` 
+                    : `${product.reservedSlots} de ${product.totalSlots} reservados`
+                  }
+                </span>
               </div>
               <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style={`width: ${(product.reservedSlots / product.totalSlots) * 100}%`}></div>
+                <div class={`progress-bar-fill ${isSoldOut ? 'bar-sold-out' : ''}`} id="progress-bar-fill" style={`width: ${isSoldOut ? 100 : (product.reservedSlots / product.totalSlots) * 100}%`}></div>
               </div>
             </div>
           </div>
@@ -136,161 +143,203 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
 
         <!-- Columna Derecha: Formulario de Reserva -->
         <aside class="reservation-col" aria-label="Formulario de reserva">
-          <div class="reservation-card">
-            <h2 class="form-title">Reserva tu pedido</h2>
-            <p class="form-subtitle">
-              Selecciona la cantidad que deseas y déjanos tus datos para coordinar tu cupo con la chef.
+          <div class="reservation-card" id="reservation-card-container">
+            <h2 class="form-title" id="form-header-title">{isSoldOut ? "Tanda Agotada" : "Reserva tu pedido"}</h2>
+            <p class="form-subtitle" id="form-header-subtitle">
+              {isSoldOut 
+                ? "Se han completado todos los cupos disponibles para esta fecha de horneado." 
+                : "Selecciona la cantidad que deseas y déjanos tus datos para coordinar tu cupo con la chef."
+              }
             </p>
 
-            <!-- Banner de estado del cliente -->
-            <div id="customer-session-banner" class="session-banner" style="display: none;">
-              <span>👤 Sesión activa: <strong id="logged-user-label"></strong></span>
-              <a href="/cuenta" class="session-link">Mi Historial</a>
-            </div>
-
-            <div id="guest-session-prompt" class="session-prompt">
-              <span>💡 Reservando como invitado.</span>
-              <button type="button" id="btn-open-login-inline" class="session-prompt-btn">¿Ya tienes cuenta? Inicia sesión</button>
-            </div>
-
-            <form id="reservation-form" class="reservation-form" data-unit-price={product.price} data-product-id={product.id} data-product-name={product.name}>
-              <!-- Selector de Cantidad -->
-              <div class="form-group">
-                <label class="field-label" for="qty-input">¿Cuántos deseas ordenar?</label>
-                <div class="quantity-controller">
-                  <button type="button" class="qty-btn" id="btn-minus" aria-label="Disminuir cantidad">
-                    <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
-                  <input 
-                    type="number" 
-                    id="qty-input" 
-                    name="quantity" 
-                    value="1" 
-                    min="1" 
-                    max={remainingSlots} 
-                    readonly 
-                    class="qty-display"
-                    aria-live="polite"
-                  />
-                  <button type="button" class="qty-btn" id="btn-plus" aria-label="Aumentar cantidad">
-                    <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </button>
+            <!-- Bloque elegante de Tanda Agotada / Reservas Cerradas -->
+            <div id="sold-out-notice" class="sold-out-notice-block" style={isSoldOut ? '' : 'display: none;'}>
+              <div class="sold-out-pill-badge">
+                <span class="sold-out-pill-dot"></span>
+                <span>Cupos Agotados • Tanda Completa</span>
+              </div>
+              <div class="sold-out-icon-wrap">🚫</div>
+              <h3 class="sold-out-headline">Reservaciones Cerradas</h3>
+              <p class="sold-out-expl">
+                Esta tanda artesanal de <strong>{product.name}</strong> ha alcanzado su capacidad máxima de <strong>{product.totalSlots} cupos</strong>. Ya no es posible ingresar nuevas órdenes.
+              </p>
+              <div class="sold-out-waitlist-box">
+                <div class="waitlist-icon">🔔</div>
+                <div class="waitlist-text">
+                  <strong>¿Deseas estar en lista de espera?</strong>
+                  <p>Si algún cupo se libera por cancelación o la chef abre porciones extras, te avisaremos de primero por WhatsApp.</p>
                 </div>
               </div>
+              <div class="sold-out-buttons">
+                <a 
+                  href={`https://wa.me/50760000000?text=${encodeURIComponent(`¡Hola Chef Chelsea! 👋 Vi que la tanda de ${product.name} está completa. Me gustaría anotarme en lista de espera por si se libera algún cupo.`)}`}
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  class="btn-wa-waitlist"
+                >
+                  <svg viewBox="0 0 24 24" class="btn-icon" fill="currentColor">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                  </svg>
+                  <span>Anotarme en lista de espera por WhatsApp</span>
+                </a>
+                <a href="/" class="btn-return-catalogue">
+                  <span>← Ver catálogo de tandas</span>
+                </a>
+              </div>
+            </div>
 
-              <!-- Nombre del cliente -->
-              <div class="form-group">
-                <label class="field-label" for="customer-name">Tu nombre y apellido <span class="required">*</span></label>
-                <input 
-                  type="text" 
-                  id="customer-name" 
-                  name="customerName" 
-                  placeholder="Ej. Chelsea Morales" 
-                  required 
-                  class="text-input"
-                />
+            <!-- Contenedor del Formulario (se oculta automáticamente cuando se acaban los cupos) -->
+            <div id="reservation-form-container" style={isSoldOut ? 'display: none;' : ''}>
+              <!-- Banner de estado del cliente -->
+              <div id="customer-session-banner" class="session-banner" style="display: none;">
+                <span>👤 Sesión activa: <strong id="logged-user-label"></strong></span>
+                <a href="/cuenta" class="session-link">Mi Historial</a>
               </div>
 
-              <!-- Número de contacto -->
-              <div class="form-group">
-                <label class="field-label" for="customer-phone">Número de contacto (WhatsApp) <span class="required">*</span></label>
-                <div class="phone-input-wrap">
-                  <span class="country-prefix">+507</span>
+              <div id="guest-session-prompt" class="session-prompt">
+                <span>💡 Reservando como invitado.</span>
+                <button type="button" id="btn-open-login-inline" class="session-prompt-btn">¿Ya tienes cuenta? Inicia sesión</button>
+              </div>
+
+              <form id="reservation-form" class="reservation-form" data-unit-price={product.price} data-product-id={product.id} data-product-name={product.name}>
+                <!-- Selector de Cantidad -->
+                <div class="form-group">
+                  <label class="field-label" for="qty-input">¿Cuántos deseas ordenar?</label>
+                  <div class="quantity-controller">
+                    <button type="button" class="qty-btn" id="btn-minus" aria-label="Disminuir cantidad">
+                      <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input 
+                      type="number" 
+                      id="qty-input" 
+                      name="quantity" 
+                      value="1" 
+                      min="1" 
+                      max={remainingSlots} 
+                      readonly 
+                      class="qty-display"
+                      aria-live="polite"
+                    />
+                    <button type="button" class="qty-btn" id="btn-plus" aria-label="Aumentar cantidad">
+                      <svg viewBox="0 0 24 24" class="btn-qty-icon" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nombre del cliente -->
+                <div class="form-group">
+                  <label class="field-label" for="customer-name">Tu nombre y apellido <span class="required">*</span></label>
                   <input 
-                    type="tel" 
-                    id="customer-phone" 
-                    name="customerPhone" 
-                    placeholder="6000-0000" 
-                    pattern="[0-9\s-]{7,15}"
+                    type="text" 
+                    id="customer-name" 
+                    name="customerName" 
+                    placeholder="Ej. Chelsea Morales" 
                     required 
-                    class="text-input phone-input"
+                    class="text-input"
                   />
                 </div>
-                <span class="field-help">Te escribiremos a este número para coordinar la entrega.</span>
-              </div>
 
-              <!-- Opción de crear cuenta para invitados -->
-              <div id="guest-account-toggle-wrap" class="guest-toggle-card">
-                <label class="checkbox-flex">
-                  <input type="checkbox" id="chk-create-account" />
-                  <span class="checkbox-text">Crear una cuenta con estos datos para guardar mi pedido en mi historial</span>
-                </label>
-
-                <div id="guest-password-fields" class="guest-extra-fields" style="display: none;">
-                  <div class="form-group">
-                    <label class="field-label" for="guest-email">Correo Electrónico *</label>
-                    <input type="email" id="guest-email" placeholder="tu@correo.com" class="text-input" />
+                <!-- Número de contacto -->
+                <div class="form-group">
+                  <label class="field-label" for="customer-phone">Número de contacto (WhatsApp) <span class="required">*</span></label>
+                  <div class="phone-input-wrap">
+                    <span class="country-prefix">+507</span>
+                    <input 
+                      type="tel" 
+                      id="customer-phone" 
+                      name="customerPhone" 
+                      placeholder="6000-0000" 
+                      pattern="[0-9\s-]{7,15}"
+                      required 
+                      class="text-input phone-input"
+                    />
                   </div>
-                  <div class="form-group">
-                    <label class="field-label" for="guest-pass">Crea una Contraseña *</label>
-                    <input type="password" id="guest-pass" placeholder="Mínimo 6 caracteres" minlength="6" class="text-input" />
+                  <span class="field-help">Te escribiremos a este número para coordinar la entrega.</span>
+                </div>
+
+                <!-- Opción de crear cuenta para invitados -->
+                <div id="guest-account-toggle-wrap" class="guest-toggle-card">
+                  <label class="checkbox-flex">
+                    <input type="checkbox" id="chk-create-account" />
+                    <span class="checkbox-text">Crear una cuenta con estos datos para guardar mi pedido en mi historial</span>
+                  </label>
+
+                  <div id="guest-password-fields" class="guest-extra-fields" style="display: none;">
+                    <div class="form-group">
+                      <label class="field-label" for="guest-email">Correo Electrónico *</label>
+                      <input type="email" id="guest-email" placeholder="tu@correo.com" class="text-input" />
+                    </div>
+                    <div class="form-group">
+                      <label class="field-label" for="guest-pass">Crea una Contraseña *</label>
+                      <input type="password" id="guest-pass" placeholder="Mínimo 6 caracteres" minlength="6" class="text-input" />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Punto de entrega / Retiro -->
-              <div class="form-group">
-                <label class="field-label" for="pickup-location">Punto de retiro o entrega <span class="required">*</span></label>
-                <select id="pickup-location" name="pickupLocation" required class="text-input select-input">
-                  <option value="" disabled selected>Selecciona tu zona</option>
-                  <option value="Tierras Altas (Volcán / Bambito)">Tierras Altas (Volcán / Bambito)</option>
-                  <option value="Bugaba (Parque / Punto céntrico)">Bugaba (Parque / Punto céntrico)</option>
-                  <option value="David (Plaza / Delivery)">David (Plaza / Delivery)</option>
-                </select>
-              </div>
-
-              <!-- Notas adicionales -->
-              <div class="form-group">
-                <label class="field-label" for="order-notes">Instrucciones o notas adicionales <span class="optional">(opcional)</span></label>
-                <textarea 
-                  id="order-notes" 
-                  name="orderNotes" 
-                  rows="2" 
-                  placeholder="Ej. Empacar para regalo, o prefiero retirar a las 3:00 PM..." 
-                  class="text-input textarea-input"
-                ></textarea>
-              </div>
-
-              <!-- Resumen de Costo -->
-              <div class="cost-summary">
-                <div class="summary-row">
-                  <span>Precio unitario:</span>
-                  <span>${product.price.toFixed(2)}</span>
+                <!-- Punto de entrega / Retiro -->
+                <div class="form-group">
+                  <label class="field-label" for="pickup-location">Punto de retiro o entrega <span class="required">*</span></label>
+                  <select id="pickup-location" name="pickupLocation" required class="text-input select-input">
+                    <option value="" disabled selected>Selecciona tu zona</option>
+                    <option value="Tierras Altas (Volcán / Bambito)">Tierras Altas (Volcán / Bambito)</option>
+                    <option value="Bugaba (Parque / Punto céntrico)">Bugaba (Parque / Punto céntrico)</option>
+                    <option value="David (Plaza / Delivery)">David (Plaza / Delivery)</option>
+                  </select>
                 </div>
-                <div class="summary-row">
-                  <span>Cantidad:</span>
-                  <span id="summary-qty">1</span>
-                </div>
-                <div class="summary-total-row">
-                  <span>Total estimado a pagar:</span>
-                  <span class="total-price-text" id="summary-total">${product.price.toFixed(2)}</span>
-                </div>
-              </div>
 
-              <!-- Botón de Confirmación -->
-              <button type="submit" class="btn-confirm-reserve" id="btn-submit-reservation">
-                <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Confirmar y Enviar Reserva</span>
-              </button>
-            </form>
+                <!-- Notas adicionales -->
+                <div class="form-group">
+                  <label class="field-label" for="order-notes">Instrucciones o notas adicionales <span class="optional">(opcional)</span></label>
+                  <textarea 
+                    id="order-notes" 
+                    name="orderNotes" 
+                    rows="2" 
+                    placeholder="Ej. Empacar para regalo, o prefiero retirar a las 3:00 PM..." 
+                    class="text-input textarea-input"
+                  ></textarea>
+                </div>
 
-            <p class="trust-note">
-              🔒 Pago al momento de retirar o por transferencia bancaria / Yappy tras confirmar disponibilidad.
-            </p>
+                <!-- Resumen de Costo -->
+                <div class="cost-summary">
+                  <div class="summary-row">
+                    <span>Precio unitario:</span>
+                    <span>${product.price.toFixed(2)}</span>
+                  </div>
+                  <div class="summary-row">
+                    <span>Cantidad:</span>
+                    <span id="summary-qty">1</span>
+                  </div>
+                  <div class="summary-total-row">
+                    <span>Total estimado a pagar:</span>
+                    <span class="total-price-text" id="summary-total">${product.price.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <!-- Botón de Confirmación -->
+                <button type="submit" class="btn-confirm-reserve" id="btn-submit-reservation">
+                  <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Confirmar y Enviar Reserva</span>
+                </button>
+              </form>
+
+              <p class="trust-note">
+                🔒 Pago al momento de retirar o por transferencia bancaria / Yappy tras confirmar disponibilidad.
+              </p>
+            </div>
           </div>
         </aside>
       </div>
     </div>
   </main>
 
-  <!-- Modal de Éxito al Reservar -->
+  <!-- Modal de Éxito al Reservar (Confirmación Automática) -->
   <div id="reservation-modal" class="modal-overlay" aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true">
       <div class="modal-check-icon">
@@ -298,32 +347,39 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
       </div>
-      <h3 class="modal-title">¡Reserva Generada con Éxito!</h3>
+      <span class="modal-badge-pill">✓ Cupo Confirmado Inmediatamente</span>
+      <h3 class="modal-title">¡Tu Reserva Está Lista!</h3>
       <p class="modal-text" id="modal-summary-text">
-        Tu pedido ha sido preparado y registrado.
+        Tu cupo ha sido reservado y agregado directamente a la lista de horneado.
       </p>
 
       <div class="modal-actions">
-        <a id="modal-whatsapp-btn" href="#" target="_blank" class="btn-modal-wa">
-          <span>💬 Enviar Reserva a la Chef por WhatsApp</span>
+        <a href="/cuenta" id="modal-account-link" class="btn-modal-primary">
+          <span>Ver Mi Reserva en Mi Cuenta</span>
         </a>
-        <a href="/cuenta" id="modal-account-link" class="btn-modal-account" style="display: none;">
-          Ver en Mi Cuenta
+        <a href="/" class="btn-modal-secondary">
+          <span>Explorar Otras Tandas</span>
         </a>
-        <button type="button" id="modal-close-btn" class="btn-modal-close">
-          <span>Cerrar</span>
+        <button type="button" id="modal-close-btn" class="btn-modal-subtle">
+          <span>Seguir en esta página</span>
         </button>
+      </div>
+
+      <div class="modal-wa-hint">
+        <span>¿Tienes alguna consulta especial?</span>
+        <a id="modal-whatsapp-btn" href="#" target="_blank" class="modal-wa-link">
+          💬 Escribir opcionalmente por WhatsApp
+        </a>
       </div>
     </div>
   </div>
 
   <Footer />
-  <BottomNav activeTab="tandas" />
 </Layout>
 
 <script>
   import { getCurrentUser, registerUser } from '../../services/auth';
-  import { createOrder } from '../../services/orders';
+  import { createOrder, getActiveReservedSlotsForProduct, syncTandaReservedSlots } from '../../services/orders';
 
   const form = document.getElementById('reservation-form') as HTMLFormElement;
   const qtyInput = document.getElementById('qty-input') as HTMLInputElement;
@@ -351,6 +407,90 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
   const modalWhatsappBtn = document.getElementById('modal-whatsapp-btn') as HTMLAnchorElement;
   const modalAccountLink = document.getElementById('modal-account-link') as HTMLAnchorElement;
   const modalCloseBtn = document.getElementById('modal-close-btn') as HTMLButtonElement;
+
+  const scarcityWrap = document.getElementById('scarcity-indicator-wrap');
+  const slotsLeftText = document.getElementById('slots-left-text');
+  const slotsTotalText = document.getElementById('slots-total-text');
+  const progressBarFill = document.getElementById('progress-bar-fill');
+
+  function updateScarcityMeter() {
+    if (!scarcityWrap || !form) return;
+    const totalSlots = parseInt(scarcityWrap.dataset.totalSlots || "20", 10);
+    const baseReserved = parseInt(scarcityWrap.dataset.baseReserved || "0", 10);
+    const productId = form.dataset.productId || "";
+    const productName = form.dataset.productName || "";
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const productSlug = pathParts.pop() || "";
+
+    const activeOrderSlots = getActiveReservedSlotsForProduct(productId, productName, productSlug, 1);
+    const effectiveReserved = Math.max(baseReserved, activeOrderSlots);
+    const remaining = Math.max(0, totalSlots - effectiveReserved);
+    const isSoldOut = remaining <= 0;
+    const pct = isSoldOut ? 100 : Math.min(100, Math.round((effectiveReserved / totalSlots) * 100));
+
+    if (activeOrderSlots > baseReserved) {
+      syncTandaReservedSlots(productId, productName, productSlug);
+    }
+
+    const formContainer = document.getElementById('reservation-form-container');
+    const soldOutNotice = document.getElementById('sold-out-notice');
+    const formHeaderTitle = document.getElementById('form-header-title');
+    const formHeaderSubtitle = document.getElementById('form-header-subtitle');
+    const btnSubmit = document.getElementById('btn-submit-reservation') as HTMLButtonElement;
+
+    if (isSoldOut) {
+      if (scarcityWrap) scarcityWrap.classList.add('is-sold-out');
+      if (slotsLeftText) {
+        slotsLeftText.textContent = '🚫 Cupos Agotados';
+        slotsLeftText.classList.add('sold-out-text');
+      }
+      if (slotsTotalText) slotsTotalText.textContent = `${totalSlots} de ${totalSlots} reservados (100%)`;
+      if (progressBarFill) {
+        progressBarFill.style.width = '100%';
+        progressBarFill.classList.add('bar-sold-out');
+      }
+
+      if (formHeaderTitle) formHeaderTitle.textContent = 'Tanda Agotada';
+      if (formHeaderSubtitle) formHeaderSubtitle.textContent = 'Se han completado todos los cupos disponibles para esta fecha de horneado.';
+      if (soldOutNotice) soldOutNotice.style.display = 'block';
+      if (formContainer) formContainer.style.display = 'none';
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+      }
+    } else {
+      if (scarcityWrap) scarcityWrap.classList.remove('is-sold-out');
+      if (slotsLeftText) {
+        slotsLeftText.textContent = `🔥 Solo quedan ${remaining} cupos`;
+        slotsLeftText.classList.remove('sold-out-text');
+      }
+      if (slotsTotalText) slotsTotalText.textContent = `${effectiveReserved} de ${totalSlots} reservados`;
+      if (progressBarFill) {
+        progressBarFill.style.width = `${pct}%`;
+        progressBarFill.classList.remove('bar-sold-out');
+      }
+
+      if (formHeaderTitle) formHeaderTitle.textContent = 'Reserva tu pedido';
+      if (formHeaderSubtitle) formHeaderSubtitle.textContent = 'Selecciona la cantidad que deseas y déjanos tus datos para coordinar tu cupo con la chef.';
+      if (soldOutNotice) soldOutNotice.style.display = 'none';
+      if (formContainer) formContainer.style.display = 'block';
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+      }
+
+      if (qtyInput) {
+        qtyInput.setAttribute('max', remaining.toString());
+        let currentVal = parseInt(qtyInput.value, 10) || 1;
+        if (currentVal > remaining && remaining > 0) {
+          qtyInput.value = remaining.toString();
+          if (summaryQty) summaryQty.textContent = remaining.toString();
+        }
+      }
+    }
+  }
+
+  updateScarcityMeter();
+  window.addEventListener('softcookies:orders-updated', updateScarcityMeter);
+  window.addEventListener('softcookies:order-created', updateScarcityMeter);
 
   function updateCustomerState() {
     const user = getCurrentUser();
@@ -433,6 +573,27 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
       const qty = parseInt(qtyInput.value, 10);
       let currentUser = getCurrentUser();
 
+      // Guard check: verify cupos are still available before submitting
+      const totalSlots = parseInt(scarcityWrap?.dataset.totalSlots || "20", 10);
+      const baseReserved = parseInt(scarcityWrap?.dataset.baseReserved || "0", 10);
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const productSlug = pathParts.pop() || "";
+      const currentActive = getActiveReservedSlotsForProduct(productId, productName, productSlug, 1);
+      const effectiveReserved = Math.max(baseReserved, currentActive);
+      const currentRemaining = Math.max(0, totalSlots - effectiveReserved);
+
+      if (currentRemaining <= 0) {
+        alert('Lo sentimos, los cupos para esta tanda se han completado y las reservaciones están cerradas.');
+        updateScarcityMeter();
+        return;
+      }
+
+      if (qty > currentRemaining) {
+        alert(`Lo sentimos, solo quedan ${currentRemaining} cupo(s) disponible(s). Ajusta la cantidad antes de enviar.`);
+        updateScarcityMeter();
+        return;
+      }
+
       // If guest wants to register account along with order
       if (!currentUser && chkCreateAccount?.checked) {
         const email = guestEmailInput.value.trim();
@@ -456,7 +617,8 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
         productId,
         productName,
         unitPrice,
-        quantity: qty
+        quantity: qty,
+        totalSlots
       });
 
       // WhatsApp Message
@@ -476,19 +638,16 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
       // Update Modal
-      if (modal && modalSummaryText && modalWhatsappBtn) {
-        modalSummaryText.textContent = `¡Gracias, ${name}! Tu reserva #${createdOrder.orderNumber} de ${qty}x ${productName} ($${createdOrder.total.toFixed(2)}) ha sido guardada.`;
-        modalWhatsappBtn.href = whatsappUrl;
+      if (modal && modalSummaryText) {
+        modalSummaryText.innerHTML = `¡Gracias, <strong>${name}</strong>! Tu reserva <strong>#${createdOrder.orderNumber}</strong> de <strong>${qty}x ${productName}</strong> ($${createdOrder.total.toFixed(2)}) ha sido <strong>confirmada de inmediato</strong> y agregada a la lista de horneado.`;
+        if (modalWhatsappBtn) modalWhatsappBtn.href = whatsappUrl;
 
         if (modalAccountLink) {
-          modalAccountLink.style.display = currentUser ? 'inline-flex' : 'none';
+          modalAccountLink.style.display = 'inline-flex';
         }
 
         modal.classList.add('modal-visible');
         modal.setAttribute('aria-hidden', 'false');
-
-        // Automatically open WhatsApp in new tab
-        window.open(whatsappUrl, '_blank');
       }
     });
 
@@ -916,15 +1075,6 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
     box-shadow: none;
   }
 
-  .select-input {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f5539' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 16px;
-    padding-right: 2.5rem;
-  }
 
   .textarea-input {
     resize: vertical;
@@ -1079,65 +1229,118 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
     margin-bottom: 1.75rem;
   }
 
+  .modal-badge-pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #065f46;
+    background-color: #d1fae5;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(5, 150, 105, 0.2);
+  }
+
   .modal-actions {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .btn-modal-wa {
+  .btn-modal-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 0.85rem;
-    border-radius: var(--radius-full);
-    background-color: #25d366;
-    color: #ffffff;
-    font-weight: 800;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-  }
-
-  .btn-modal-wa:hover {
-    background-color: #1eb857;
-    transform: translateY(-1px);
-  }
-
-  .btn-modal-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: var(--radius-full);
-    background-color: var(--color-surface-container);
-    color: var(--color-on-surface);
-    font-weight: 700;
-    font-size: 0.9rem;
-    transition: background-color 0.2s ease;
-  }
-
-  .btn-modal-close:hover {
-    background-color: var(--color-surface-container-high);
-  }
-
-  .btn-modal-account {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 0.75rem;
+    padding: 0.85rem 1.25rem;
     border-radius: var(--radius-full);
     background-color: var(--color-primary);
-    color: #ffffff;
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 14px rgba(141, 75, 0, 0.25);
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-modal-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(141, 75, 0, 0.35);
+  }
+
+  .btn-modal-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.8rem 1.25rem;
+    border-radius: var(--radius-full);
+    background-color: var(--color-surface-container);
+    color: var(--color-secondary-dark) !important;
     font-weight: 800;
     font-size: 0.9rem;
+    border: 1px solid rgba(74, 40, 16, 0.1);
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-modal-secondary:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface) !important;
+  }
+
+  .btn-modal-subtle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-on-surface-muted);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .btn-modal-subtle:hover {
+    color: var(--color-on-surface);
+  }
+
+  .modal-wa-hint {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(74, 40, 16, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.825rem;
+    color: var(--color-on-surface-muted);
+  }
+
+  .modal-wa-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #047857;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-full);
+    background-color: #f0fdf4;
+    border: 1px solid rgba(4, 120, 87, 0.15);
     transition: all 0.2s ease;
   }
 
-  .btn-modal-account:hover {
-    background-color: var(--color-primary-hover);
+  .modal-wa-link:hover {
+    background-color: #dcfce7;
+    color: #065f46;
   }
 
   /* Session & Guest UI */
@@ -1206,5 +1409,146 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
     margin-top: 0.85rem;
     padding-top: 0.75rem;
     border-top: 1px solid var(--color-border-subtle);
+  }
+
+  /* Sold-out notice styling */
+  .sold-out-notice-block {
+    background: linear-gradient(135deg, #fff9f9 0%, #fff4f4 100%);
+    border: 1px solid rgba(186, 26, 26, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(186, 26, 26, 0.06);
+    margin-bottom: 1.5rem;
+  }
+
+  .sold-out-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background-color: #fee2e2;
+    color: #991b1b;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.35rem 0.95rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(153, 27, 27, 0.2);
+    margin-bottom: 1.25rem;
+  }
+
+  .sold-out-pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #dc2626;
+  }
+
+  .sold-out-icon-wrap {
+    font-size: 2.75rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+
+  .sold-out-headline {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #7f1d1d;
+    margin-bottom: 0.65rem;
+  }
+
+  .sold-out-expl {
+    font-size: 0.925rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+  }
+
+  .sold-out-waitlist-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background-color: #ffffff;
+    border: 1px dashed rgba(186, 26, 26, 0.3);
+    border-radius: var(--radius-md);
+    padding: 0.95rem 1.15rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
+  }
+
+  .waitlist-icon {
+    font-size: 1.35rem;
+    flex-shrink: 0;
+  }
+
+  .waitlist-text strong {
+    display: block;
+    font-size: 0.85rem;
+    color: #7f1d1d;
+    margin-bottom: 0.25rem;
+  }
+
+  .waitlist-text p {
+    font-size: 0.8rem;
+    color: var(--color-on-surface-variant);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .sold-out-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-wa-waitlist {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    background-color: #25D366;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+  }
+
+  .btn-wa-waitlist:hover {
+    background-color: #20ba59;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+  }
+
+  .btn-return-catalogue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    background-color: var(--color-surface-container);
+    border: 1px solid var(--color-outline-variant);
+    transition: all 0.2s ease;
+  }
+
+  .btn-return-catalogue:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-primary);
+  }
+
+  /* Scarcity indicator sold out state */
+  .sold-out-text {
+    color: #ba1a1a !important;
+    font-weight: 800;
+  }
+
+  .bar-sold-out {
+    background: linear-gradient(90deg, #93000a 0%, #ba1a1a 100%) !important;
   }
 </style>

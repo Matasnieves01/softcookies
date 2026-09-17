@@ -61,19 +61,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    if (!image || !image.trim()) {
-      return new Response(JSON.stringify({ success: false, error: 'Debes incluir una foto para la tanda' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    const finalImage = (image && image.trim()) ? image.trim() : '/images/tarta-vasca.jpg';
 
     const tandaInput: TandaInput = {
       name: name.trim(),
       subtitle: subtitle ? subtitle.trim() : '',
       price: Number(price) > 0 ? Number(price) : 6.50,
       unit: unit || '/ porción',
-      image: image.trim(),
+      image: finalImage,
       shortDescription: shortDescription ? shortDescription.trim() : '',
       longDescription: longDescription ? longDescription.trim() : '',
       deliveryDate: deliveryDate.trim(),

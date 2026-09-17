@@ -251,6 +251,115 @@ export async function deleteTandaFromDb(db: any, id: string): Promise<boolean> {
   return true;
 }
 
+// Server-side: Get single tanda by id
+export async function getTandaByIdFromDb(db: any, id: string): Promise<Tanda | null> {
+  if (db) {
+    await ensureTandasTable(db);
+    try {
+      const res = await db.prepare('SELECT * FROM tandas WHERE id = ? LIMIT 1').bind(id).first();
+      if (res) return mapRowToTanda(res);
+    } catch (err) {
+      console.error(`Error fetching tanda with id ${id} from D1:`, err);
+    }
+  }
+
+  const found = fallbackTandas.find((t) => t.id === id);
+  return found || null;
+}
+
+// Server-side: Update tanda in D1 or in-memory fallback
+export async function updateTandaInDb(
+  db: any,
+  id: string,
+  updates: Partial<TandaInput> & { reservedSlots?: number; isActive?: boolean }
+): Promise<Tanda | null> {
+  let existing = await getTandaByIdFromDb(db, id);
+  if (!existing) {
+    const found = fallbackTandas.find((t) => t.id === id);
+    if (!found) return null;
+    existing = found;
+  }
+
+  const updatedName = updates.name !== undefined ? updates.name.trim() : existing.name;
+  const updatedSubtitle = updates.subtitle !== undefined ? updates.subtitle.trim() : existing.subtitle;
+  const updatedPrice = updates.price !== undefined ? Number(updates.price) : existing.price;
+  const updatedUnit = updates.unit !== undefined ? updates.unit : existing.unit;
+  const updatedImage = updates.image !== undefined ? updates.image : existing.image;
+  const updatedLongDesc = updates.longDescription !== undefined ? updates.longDescription.trim() : existing.longDescription;
+  const updatedShortDesc = updates.shortDescription !== undefined 
+    ? updates.shortDescription.trim() 
+    : (updates.longDescription !== undefined ? updates.longDescription.trim().slice(0, 120) : existing.shortDescription);
+  const updatedDeliveryDate = updates.deliveryDate !== undefined ? updates.deliveryDate.trim() : existing.deliveryDate;
+  const updatedTotalSlots = updates.totalSlots !== undefined ? Number(updates.totalSlots) : existing.totalSlots;
+  const updatedReservedSlots = updates.reservedSlots !== undefined ? Number(updates.reservedSlots) : existing.reservedSlots;
+  const updatedIsActive = updates.isActive !== undefined ? Boolean(updates.isActive) : existing.isActive;
+  const updatedLocations = updates.locations !== undefined ? updates.locations : existing.locations;
+
+  const updatedTanda: Tanda = {
+    ...existing,
+    name: updatedName,
+    subtitle: updatedSubtitle,
+    price: updatedPrice,
+    unit: updatedUnit,
+    image: updatedImage,
+    shortDescription: updatedShortDesc,
+    longDescription: updatedLongDesc,
+    deliveryDate: updatedDeliveryDate,
+    batchDates: updatedDeliveryDate,
+    locations: updatedLocations,
+    totalSlots: updatedTotalSlots,
+    reservedSlots: updatedReservedSlots,
+    isActive: updatedIsActive
+  };
+
+  if (db) {
+    await ensureTandasTable(db);
+    try {
+      await db.prepare(`
+        UPDATE tandas SET
+          name = ?,
+          subtitle = ?,
+          price = ?,
+          unit = ?,
+          image = ?,
+          short_description = ?,
+          long_description = ?,
+          delivery_date = ?,
+          locations = ?,
+          total_slots = ?,
+          reserved_slots = ?,
+          is_active = ?
+        WHERE id = ?
+      `).bind(
+        updatedName,
+        updatedSubtitle,
+        updatedPrice,
+        updatedUnit,
+        updatedImage,
+        updatedShortDesc,
+        updatedLongDesc,
+        updatedDeliveryDate,
+        JSON.stringify(updatedLocations),
+        updatedTotalSlots,
+        updatedReservedSlots,
+        updatedIsActive ? 1 : 0,
+        id
+      ).run();
+    } catch (err) {
+      console.error('Error updating tanda in D1:', err);
+    }
+  }
+
+  const idx = fallbackTandas.findIndex((t) => t.id === id);
+  if (idx !== -1) {
+    fallbackTandas[idx] = updatedTanda;
+  } else {
+    fallbackTandas.unshift(updatedTanda);
+  }
+
+  return updatedTanda;
+}
+
 // Client-side helper functions for browser
 export async function fetchTandasClient(all = false): Promise<Tanda[]> {
   try {
@@ -278,6 +387,23 @@ export async function createTandaClient(input: TandaInput): Promise<Tanda> {
   return data.tanda;
 }
 
+export async function updateTandaClient(
+  id: string, 
+  input: Partial<TandaInput> & { reservedSlots?: number; isActive?: boolean }
+): Promise<Tanda> {
+  const res = await fetch(`/api/tandas/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input)
+  });
+  if (!res.ok) {
+    const errData: any = await res.json().catch(() => ({}));
+    throw new Error(errData.error || 'Error al actualizar la tanda en la base de datos');
+  }
+  const data: any = await res.json();
+  return data.tanda;
+}
+
 export async function toggleTandaClient(id: string): Promise<void> {
   const res = await fetch(`/api/tandas/${id}`, { method: 'PATCH' });
   if (!res.ok) throw new Error('Error al actualizar estado de la tanda');
@@ -287,3 +413,9 @@ export async function deleteTandaClient(id: string): Promise<void> {
   const res = await fetch(`/api/tandas/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Error al eliminar la tanda');
 }
+
+// Aliases for creating a tanda from any component or script
+export const createTanda = createTandaClient;
+export const updateTanda = updateTandaClient;
+export const crearTanda = createTandaClient;
+export const modificarTanda = updateTandaClient;
