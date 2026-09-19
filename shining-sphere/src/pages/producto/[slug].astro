@@ -117,28 +117,7 @@ const ingredients = product.ingredients && product.ingredients.length ? product.
             </div>
           </div>
 
-          <!-- Descripción detallada -->
-          <article class="info-card description-card">
-            <h2 class="card-title">Sobre esta receta artesanal</h2>
-            <p class="description-text">{product.longDescription}</p>
 
-            <h3 class="subsection-title">Detalles y conservación:</h3>
-            <ul class="styled-list">
-              {details.map((detail) => (
-                <li>
-                  <span class="list-check">✓</span>
-                  <span>{detail}</span>
-                </li>
-              ))}
-            </ul>
-
-            <h3 class="subsection-title">Ingredientes principales:</h3>
-            <div class="ingredients-tags">
-              {ingredients.map((ing) => (
-                <span class="ingredient-pill">{ing}</span>
-              ))}
-            </div>
-          </article>
         </section>
 
         <!-- Columna Derecha: Formulario de Reserva -->

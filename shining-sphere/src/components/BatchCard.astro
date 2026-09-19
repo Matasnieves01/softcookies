@@ -22,24 +22,36 @@ const {
   price = "$6.50",
   unit = "/ porción",
   imageSrc = "/images/tarta-vasca.jpg",
-  imageAlt = title,
+  imageAlt,
   reservedCount = 0,
   totalCount = 25
 } = Astro.props;
 
-const remainingCount = Math.max(0, totalCount - reservedCount);
-const isSoldOut = remainingCount <= 0;
-const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCount) * 100);
+const safeSlug: string = String(slug || "tanda");
+const safeTitle: string = String(title || "");
+const safeSubtitle: string = String(subtitle || "");
+const safeDescription: string = String(description || "");
+const safeDateText: string = String(dateText || "");
+const safePrice: string = String(price || "$6.50");
+const safeUnit: string = String(unit || "/ porción");
+const safeImageSrc: string = String(imageSrc || "/images/tarta-vasca.jpg");
+const safeImageAlt: string = String(imageAlt || safeTitle || "Tanda Soft Cookies");
+const safeReservedCount: number = typeof reservedCount === 'number' && !isNaN(reservedCount) ? reservedCount : 0;
+const safeTotalCount: number = typeof totalCount === 'number' && !isNaN(totalCount) && totalCount > 0 ? totalCount : 25;
+
+const remainingCount: number = Math.max(0, safeTotalCount - safeReservedCount);
+const isSoldOut: boolean = remainingCount <= 0;
+const progressPercentage: number = isSoldOut ? 100 : Math.round((safeReservedCount / safeTotalCount) * 100);
 ---
 
-<article class={`batch-card ${isSoldOut ? 'card-sold-out' : ''}`} aria-label={`Tanda de ${title}`}>
+<article class={`batch-card ${isSoldOut ? 'card-sold-out' : ''}`} aria-label={`Tanda de ${safeTitle}`}>
   <div class="card-grid">
     <!-- Visual Showcase Column (Clean without stickers or floating badges) -->
     <div class="visual-col">
       <div class="image-wrapper">
         <img 
-          src={imageSrc} 
-          alt={imageAlt} 
+          src={safeImageSrc} 
+          alt={safeImageAlt} 
           class="product-image"
           loading="lazy"
         />
@@ -54,16 +66,16 @@ const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCo
       <!-- Top Price Row (Desktop/Mobile unified) -->
       <div class="price-header">
         <div class="price-tag">
-          <span class="price-val">{price}</span>
-          <span class="price-unit">{unit}</span>
+          <span class="price-val">{safePrice}</span>
+          <span class="price-unit">{safeUnit}</span>
         </div>
       </div>
 
       <!-- Titles & Description -->
       <div class="title-section">
-        <h3 class="product-title">{title}</h3>
-        <p class="product-subtitle">{subtitle}</p>
-        <p class="product-description">{description}</p>
+        <h3 class="product-title">{safeTitle}</h3>
+        {safeSubtitle && <p class="product-subtitle">{safeSubtitle}</p>}
+        {safeDescription && <p class="product-description">{safeDescription}</p>}
       </div>
 
       <!-- Schedule Meta -->
@@ -74,7 +86,7 @@ const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCo
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span>{dateText}</span>
+        <span>{safeDateText}</span>
       </div>
 
       <!-- Scarcity & Progress Tracker -->
@@ -84,23 +96,23 @@ const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCo
             <span class="remaining-text sold-out-text">
               🚫 Cupos agotados
             </span>
-            <span class="reserved-text">{totalCount} de {totalCount} reservados (100%)</span>
+            <span class="reserved-text">{safeTotalCount} de {safeTotalCount} reservados (100%)</span>
           ) : (
             <span class="remaining-text">
               <span class="fire-emoji">🔥</span> Solo quedan {remainingCount} cupos
             </span>
-            <span class="reserved-text">{reservedCount} de {totalCount} reservados</span>
+            <span class="reserved-text">{safeReservedCount} de {safeTotalCount} reservados</span>
           )}
         </div>
 
-        <div class="progress-track" role="progressbar" aria-valuenow={isSoldOut ? totalCount : reservedCount} aria-valuemin="0" aria-valuemax={totalCount}>
+        <div class="progress-track" role="progressbar" aria-valuenow={isSoldOut ? safeTotalCount : safeReservedCount} aria-valuemin={0} aria-valuemax={safeTotalCount}>
           <div class={`progress-bar ${isSoldOut ? 'bar-sold-out' : ''}`} style={`width: ${progressPercentage}%`}></div>
         </div>
       </div>
 
       <!-- Main Action Button -->
       {isSoldOut ? (
-        <a href={`/producto/${slug}`} class="cta-button btn-sold-out">
+        <a href={`/producto/${safeSlug}`} class="cta-button btn-sold-out">
           <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
@@ -108,7 +120,7 @@ const progressPercentage = isSoldOut ? 100 : Math.round((reservedCount / totalCo
           <span>Tanda completa • Ver detalles</span>
         </a>
       ) : (
-        <a href={`/producto/${slug}`} class="cta-button">
+        <a href={`/producto/${safeSlug}`} class="cta-button">
           <svg viewBox="0 0 24 24" class="btn-check-icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>

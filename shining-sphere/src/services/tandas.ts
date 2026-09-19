@@ -289,7 +289,10 @@ export async function updateTandaInDb(
   const updatedShortDesc = updates.shortDescription !== undefined 
     ? updates.shortDescription.trim() 
     : (updates.longDescription !== undefined ? updates.longDescription.trim().slice(0, 120) : existing.shortDescription);
-  const updatedDeliveryDate = updates.deliveryDate !== undefined ? updates.deliveryDate.trim() : existing.deliveryDate;
+  const updatedDeliveryDate = updates.deliveryDate !== undefined 
+    ? updates.deliveryDate.trim() 
+    : (existing.deliveryDate || existing.batchDates || '');
+  const updatedBatchDates: string = updatedDeliveryDate || existing.batchDates || '';
   const updatedTotalSlots = updates.totalSlots !== undefined ? Number(updates.totalSlots) : existing.totalSlots;
   const updatedReservedSlots = updates.reservedSlots !== undefined ? Number(updates.reservedSlots) : existing.reservedSlots;
   const updatedIsActive = updates.isActive !== undefined ? Boolean(updates.isActive) : existing.isActive;
@@ -305,7 +308,7 @@ export async function updateTandaInDb(
     shortDescription: updatedShortDesc,
     longDescription: updatedLongDesc,
     deliveryDate: updatedDeliveryDate,
-    batchDates: updatedDeliveryDate,
+    batchDates: updatedBatchDates,
     locations: updatedLocations,
     totalSlots: updatedTotalSlots,
     reservedSlots: updatedReservedSlots,
